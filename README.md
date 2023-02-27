@@ -19,6 +19,10 @@ To achieve the main goal, we will go through the following steps:
 ## ⚠ TODO before starting the Lab
 - execute the command `git checkout reference/TP2_Exercise`
   - all the files related to this lab should now be downloaded in your Workplace folder
+- Create a symbolic link to the ST library (won't compile otherwise) by running the `Link Library ST to workspace` task
+    <p float="left">
+        <img src="pictures/linkSTLibrary.png" alt="drawing" width="200"/>
+    </p>
 
 # Part 1 - C Compiler
 To understand how the code is generated, it is important to understand how the compiler works. The main compilation steps are summarized in [figure 1](#figure-1). In this first exercise we will explore this architecture experimentally.
@@ -33,19 +37,17 @@ To understand how the code is generated, it is important to understand how the c
 - Create a new folder src under Workplace/TPs and create in it a file named **test.c**
 - copy the [following code](#code-block-1) in it:
     >### Code block 1
-    ```c
-    int main()
-    {
-        int i, j, out = 0;
-        for(i=0; i < 10; i++)
-            for(j = 0; j < 10; j++)
-                out += i + j;
-        return out;
-    }
-    ```
-- Now open a terminal:
-  - using VSCode EPuck2: `Ctrl` + `Shift` + `P` and then type and execute `View: Toggle Terminal`
-  - open an external terminal
+    >```c
+    >int main()
+    >{
+    >    int i, j, out = 0;
+    >    for(i=0; i < 10; i++)
+    >        for(j = 0; j < 10; j++)
+    >            out += i + j;
+    >    return out;
+    >}
+    >```
+- Now open a terminal using VSCode EPuck2: `Ctrl` + `Shift` + `P` and then type and execute `View: Toggle Terminal`
 - in the terminal, **cd** in the folder **Workplace/TPs/src**
   - 💡 executing `ls` or `dir` will display the content of the current folder, verify that **test.c** is there
 - During the first practical, your code was compiled using the GNU toolchain for ARM processor through the VSCode task `Make ST`
@@ -63,29 +65,28 @@ To understand how the code is generated, it is important to understand how the c
 - When executing the command, the shell searchs for an executable named arm-none-eabi-gcc in the folder specifiedd in the **PATH** variables
   - executing the command in the VSCode EPuck2 internal terminal should not run in errors
     - in fact, this terminal was configured to add the arm-none-eabi toolchain to the **PATH** variables
-  - however executing this command from any other terminal might lead to errors:
+  - ⚠ however executing this command from any other terminal might lead to errors:
     ```
     arm-none-eabi-gcc -save-temps=obj -mcpu=cortex-m4 -c test.c -o test.o
 
     'arm-none-eabi-gcc' is not recognized as an internal or external command, an executable program or a batch file.
     ```
-- This error occurs because the command line instance doesn't know yet what is this command
-  - We have to add the path to the folder containing the executable files in the **PATH** environment variable
-  - the **PATH** variable is used to store the location of all the known executables the command line can call
-  - Type the following command (a bit different depending on the OS) to add the path of the ARM toolchain
-    >### set PATH for Windows
-    ```
-    set PATH=%appdata%/EPuck2Tools/gcc-arm-none-eabi-7-2017-q4-major/bins;%PATH%
-    ```
-    >### set PATH for MacOS and Linux
-    ```
-    export PATH=~/Applications/EPuck2Tools/gcc-arm-none-eabi-7-2017-q4-major/bin:$PATH
-    ```
-  - ⚠ the exact path to the gcc-arm-none-eabi toolchain might depend on your installation
-
-- ⚠ This procedure is temporary, It applies only to this current existing command line window
-  - You will have to set again the **PATH** variable if you open a new command line window
-- 🚀 Now the compilation command should execute correctly
+    - This error occurs because the command line instance doesn't know yet what is this command
+    - We have to add the path to the folder containing the executable files in the **PATH** environment variable
+    - the **PATH** variable is used to store the location of all the known executables the command line can call
+    - Type the following command (a bit different depending on the OS) to add the path of the ARM toolchain
+      >### set PATH for Windows
+      ```
+      set PATH=%appdata%/EPuck2Tools/gcc-arm-none-eabi-7-2017-q4-major/bins;%PATH%
+      ```
+      >### set PATH for MacOS and Linux
+      ```
+      export PATH=~/Applications/EPuck2Tools/gcc-arm-none-eabi-7-2017-q4-major/bin:$PATH
+      ```
+    - ⚠ the exact path to the gcc-arm-none-eabi toolchain might depend on your installation
+    - ⚠ This procedure is temporary, it applies only to this current existing command line window
+    - You will have to set again the **PATH** variable if you open a new command line window
+    - 🚀 Now the compilation command should execute correctly
 
 
 > `Task 1`
@@ -94,9 +95,8 @@ To understand how the code is generated, it is important to understand how the c
 >- Which file is generated from which step of the compiler?
 
 > `Task 2`
->- Look in detail at the assembler code generated by the compiler. Understand the assembly language instructions by using the Cortex-M4 Generic User Guide.
+>- Look in detail at the assembler code generated by the compiler. Understand the assembly language instructions by using the [Cortex-M4 Generic User Guide](https://github.com/EPFL-MICRO-315/TPs-Student/wiki/datasheets/Cortex-M4-generic-user-guide.pdf)
 >- Hints:
->    - This document is available on the moodle page of the course
 >    - Look in particular at the functionality of the instructions **push**, **pop**, **mov**, **add**, **str**, **ldr**, **cmp** and **ble**
 >    - What is the purpose of **sub sp, sp, #20** instruction at the beginning of the main function?
 >    - Try to initialize more variables in the main function and see how this instruction will change
@@ -107,17 +107,17 @@ To understand how the code is generated, it is important to understand how the c
 > - To look at this aspect in a real example, create a source C file **.c** with the [following code](#code-block-2) in it
 > - Then look at the **.i** file generated by the compilation
 
-  >### Code block 2
-  ```c
-  #define PI      3.14
-  #define CIRC(R) (2 * PI * R)
-  int main()
-  {
-    int circonference, rayon = 2;
-    circonference = CIRC(rayon);
-    return circonference;
-  }
-  ```
+>### Code block 2
+>```c
+>#define PI      3.14
+>#define CIRC(R) (2 * PI * R)
+>int main()
+>{
+>    int circonference, rayon = 2;
+>    circonference = CIRC(rayon);
+>    return circonference;
+>}
+>```
 
 ## 1.2 Compilation process
 > `Task 4`
@@ -132,23 +132,23 @@ To understand how the code is generated, it is important to understand how the c
 > - Check the warning option described in table [table 1](#table-1) on the code [code block 3](#code-block-3)
 > - Describe the impact of these options and their use with the questions askedd in the table
 
-  >### Code block 3
-  ```c
-  int main()
-  {
-      int i, j, out = 0, k;
-      for(i = 0; i < 10; i++)
-        for(j = 0; j < 10; j++)
-          out += i + j;
-  }
-  ```
+>### Code block 3
+>```c
+>int main()
+>{
+>    int i, j, out = 0, k;
+>    for(i = 0; i < 10; i++)
+>        for(j = 0; j < 10; j++)
+>            out += i + j;
+>}
+>```
 
 >### Table 1
-| Option | Influence on compilation process | When is this option useful ? |
-|---|---|---|
-| -Wreturn-type | type answer here | ... |
-| -Wunused-variable | ... | ... |
-| -Wall | ... | ... |
+>| Option | Influence on compilation process | When is this option useful ? |
+>|---|---|---|
+>| -Wreturn-type | type answer here | ... |
+>| -Wunused-variable | ... | ... |
+>| -Wall | ... | ... |
 
 > `Task 6`
 >- Understand the compiling options described in table [table 2](#table-2) on the following [code block](#code-block-4):
@@ -164,34 +164,34 @@ To understand how the code is generated, it is important to understand how the c
 >
 >Hint: **-funroll-loops** only works when an optimization level is set (**-O1**, **-O2**, **-O3**)
 
-  >### Code block 4
-  ```c
-  int main()
-  {
-      int i, j, out = 0, k;
-      for(i = 0 ; i < 10; i++)
-        for(j = 0; j < 10; j++)
-          out += i + j;
-      return out;
-  }
-  ```
+>### Code block 4
+>```c
+>int main()
+>{
+>    int i, j, out = 0, k;
+>    for(i = 0 ; i < 10; i++)
+>        for(j = 0; j < 10; j++)
+>          out += i + j;
+>    return out;
+>}
+>```
 
 >### Table 2
-| Option | Influence on compilation process | When is this option useful ? |
-|---|---|---|
-| -O0 | type answer here | ... |
-| -O1 | ... | ... |
-| -O2 | ... | ... |
-| -O3 | ... | ... |
-| -funroll-loops | ... | ... |
-| -funroll-loops -O3 | ... | ... |
+>| Option | Influence on compilation process | When is this option useful ? |
+>|---|---|---|
+>| -O0 | type answer here | ... |
+>| -O1 | ... | ... |
+>| -O2 | ... | ... |
+>| -O3 | ... | ... |
+>| -funroll-loops | ... | ... |
+>| -funroll-loops -O3 | ... | ... |
 
 # Part 2 - Programming a PWM signal to drive a LED
 ## 2.1 Introduction
 - During Lab1, you used a timer and an interrupt routine to toggle a LED with a given frequency
 - Here, we are going to drive a LED using a PWM (Pulse Width Modulation) signal, which will allow us to change the visible intensity of the LED
 - First read the wiki to learn more about the PWM configuration on STM32
-  - Click 👉 [here](https://github.com/EPFL-MICRO-315/TPs-Student/wiki/STM32-PWMs)
+  - Click 👉 [here](https://github.com/EPFL-MICRO-315/TPs-Student/wiki/STM32-PWM)
 
 ## 2.2 Configuration of the GPIO
 - In this exercise, we will select the Pin 14 of the Port D: **PD14** that is connected to the channel 3 of the timer 4: **TIM4_CH3** as shown in the [**table 7 STM32F40xxx pin and ball definitions**](#figure-3)
@@ -247,7 +247,7 @@ To understand how the code is generated, it is important to understand how the c
 
 # Part 3 - Programming a library to drive the stepper motor of the e-puck2
 - First read the wiki to learn more about the EPuck2 Motors
-  - Click 👉 [here](https://github.com/EPFL-MICRO-315/TPs-Student/wiki/EPuck2-Motors)
+  - Click 👉 [here](https://github.com/EPFL-MICRO-315/TPs-Student/wiki/EPuck2-Motor)
 
 ## 3.1 Functions implementation
 - All the functions are already declared in **motor.c** and **motor.h**. What is asked is to complete them.
@@ -301,5 +301,4 @@ To understand how the code is generated, it is important to understand how the c
 >- What is the difference?
 >- When do we use a library instead of simply object files?
 >- Understand what **ar** is really doing by looking to its definition under http://en.wikipedia.org
-
-- 💡 If your program (that includes the library) doesn't work, it might be that you did a mistake in your library.
+>- 💡 Hint: If your program (that includes the library) doesn't work, it might be that you did a mistake in your library.
