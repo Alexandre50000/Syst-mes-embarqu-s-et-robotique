@@ -58,7 +58,7 @@ void gpio_toggle(GPIO_TypeDef *port, unsigned int pin)
 }
 
 
-void setup_selector(){
+void setup_selector(void){
     
     GPIOC->MODER &= ~(3 << (13 * 2));
     GPIOC->PUPDR &= ~(1 << (13 * 2));
@@ -78,7 +78,7 @@ void setup_selector(){
 
 }
 
-int get_selector(){
+int get_selector(void){
     int num0,num1,num2,num3,result;
     num0 = ((GPIOC->IDR & (1 << 13)) >> 13);
     num1 = ((GPIOC->IDR & (1 << 14)) >> 14);

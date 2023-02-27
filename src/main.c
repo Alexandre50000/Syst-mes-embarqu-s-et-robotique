@@ -2,6 +2,7 @@
 #include <system_clock_config.h>
 #include <gpio.h>
 #include <main.h>
+#include <time.h>
 
 
 
@@ -18,63 +19,73 @@ int main(void)
     RCC->AHB1ENR    |= RCC_AHB1ENR_GPIOCEN;
 
     // LED used init
-    gpio_config_output_opendrain(LED1);
-    gpio_config_output_opendrain(LED3);
-    gpio_config_output_opendrain(LED5);
     gpio_config_output_opendrain(LED7);
-    setup_selector();
+    timer7_start();
 
-    int num;
-    num = 0b0;
-    while (1) {
-        num = get_selector();
-        for (int i = 0; i < 1600000; ++i){
-            asm("nop");
-        }
+    while (1)
+    {
+        asm("nop");
+    }
+    
 
-        if(num < 8){
-            gpio_set(LED1);
-            for (int i = 0; i < 1600000; ++i){
-            asm("nop");}
-            gpio_set(LED3);
-            for (int i = 0; i < 1600000; ++i){
-            asm("nop");}
-            gpio_set(LED5);
-            for (int i = 0; i < 1600000; ++i){
-            asm("nop");}
-            gpio_set(LED7);
-            for (int i = 0; i < 1600000; ++i){
-            asm("nop");}
-            gpio_clear(LED1);
-            gpio_clear(LED3);
-            gpio_clear(LED5);
-            gpio_clear(LED7);
 
-        }
-        else{
-            gpio_set(LED1);
-            for (int i = 0; i < 1600000; ++i){
-            asm("nop");}
-            gpio_clear(LED1);
+    // Part 6.4:
+    // gpio_config_output_opendrain(LED3);
+    // gpio_config_output_opendrain(LED5);
+    // gpio_config_output_opendrain(LED7);
+    // setup_selector();
 
-            gpio_set(LED3);
-            for (int i = 0; i < 1600000; ++i){
-            asm("nop");}
-            gpio_clear(LED3);
+    // int num;
+    // num = 0b0;
+    // while (1) {
+    //     num = get_selector();
+    //     for (int i = 0; i < 1600000; ++i){
+    //         asm("nop");
+    //     }
 
-            gpio_set(LED5);
-            for (int i = 0; i < 1600000; ++i){
-            asm("nop");}
-            gpio_clear(LED5);
+    //     if(num < 8){
+    //         gpio_set(LED1);
+    //         for (int i = 0; i < 1600000; ++i){
+    //         asm("nop");}
+    //         gpio_set(LED3);
+    //         for (int i = 0; i < 1600000; ++i){
+    //         asm("nop");}
+    //         gpio_set(LED5);
+    //         for (int i = 0; i < 1600000; ++i){
+    //         asm("nop");}
+    //         gpio_set(LED7);
+    //         for (int i = 0; i < 1600000; ++i){
+    //         asm("nop");}
+    //         gpio_clear(LED1);
+    //         gpio_clear(LED3);
+    //         gpio_clear(LED5);
+    //         gpio_clear(LED7);
 
-            gpio_set(LED7);
-            for (int i = 0; i < 1600000; ++i){
-            asm("nop");}
-            gpio_clear(LED7);
+    //     }
+    //     else{
+    //         gpio_set(LED1);
+    //         for (int i = 0; i < 1600000; ++i){
+    //         asm("nop");}
+    //         gpio_clear(LED1);
 
-        }
+    //         gpio_set(LED3);
+    //         for (int i = 0; i < 1600000; ++i){
+    //         asm("nop");}
+    //         gpio_clear(LED3);
 
-        }
+    //         gpio_set(LED5);
+    //         for (int i = 0; i < 1600000; ++i){
+    //         asm("nop");}
+    //         gpio_clear(LED5);
+
+    //         gpio_set(LED7);
+    //         for (int i = 0; i < 1600000; ++i){
+    //         asm("nop");}
+    //         gpio_clear(LED7);
+
+    //     }
+
+    //     }
         
     }
 
