@@ -7,7 +7,7 @@
 - You will see the compiling process in detail as you have learned during the lecture
 - The rest of this exercise shows all necessary steps to generate a low-level library for the e-puck2 miniature mobile robot written in C
 - The library targeted in this exercise is a motor control library allowing to set speed and position targets.
-- 💡 All the documentation concerning the GNU embedded toolchain for ARM processors **arm-none-eabi** and the compiler GCC can be found in the subfolder **gcc-arm-none-eabi-7-2017-q4-major/share/doc/gcc-arm-none-eabi/pdf**
+- 💡 All the documentation concerning the GNU embedded toolchain for ARM processors **arm-none-eabi** and the compiler GCC can be found in the subfolder **installpath/EPuck2Tools/gcc-arm-none-eabi-7-2017-q4-major/share/doc/gcc-arm-none-eabi/pdf**
 
 ## Methodology
 To achieve the main goal, we will go through the following steps:
@@ -62,7 +62,7 @@ To understand how the code is generated, it is important to understand how the c
   - **-mcpu=cortex-m4** is called to specify the processor that will execute the code
   - **-c** specifies to not do the linking step
 - Compile the test.c file using the explained command in the terminal
-- When executing the command, the shell searchs for an executable named arm-none-eabi-gcc in the folder specifiedd in the **PATH** variables
+- When executing the command, the shell searchs for an executable named arm-none-eabi-gcc in the folder specified in the **PATH** variables
   - executing the command in the VSCode EPuck2 internal terminal should not run in errors
     - in fact, this terminal was configured to add the arm-none-eabi toolchain to the **PATH** variables
   - ⚠ however executing this command from any other terminal might lead to errors:
@@ -77,11 +77,11 @@ To understand how the code is generated, it is important to understand how the c
     - Type the following command (a bit different depending on the OS) to add the path of the ARM toolchain
       >### set PATH for Windows
       ```
-      set PATH=%appdata%/EPuck2Tools/gcc-arm-none-eabi-7-2017-q4-major/bins;%PATH%
+      set PATH=installpath/EPuck2Tools/gcc-arm-none-eabi-7-2017-q4-major/bins;%PATH%
       ```
       >### set PATH for MacOS and Linux
       ```
-      export PATH=~/Applications/EPuck2Tools/gcc-arm-none-eabi-7-2017-q4-major/bin:$PATH
+      export PATH=installpath/EPuck2Tools/gcc-arm-none-eabi-7-2017-q4-major/bin:$PATH
       ```
     - ⚠ the exact path to the gcc-arm-none-eabi toolchain might depend on your installation
     - ⚠ This procedure is temporary, it applies only to this current existing command line window
@@ -188,7 +188,7 @@ To understand how the code is generated, it is important to understand how the c
 
 # Part 2 - Programming a PWM signal to drive a LED
 ## 2.1 Introduction
-- During Lab1, you used a timer and an interrupt routine to toggle a LED with a given frequency
+- During TP1, you used a timer and an interrupt routine to toggle a LED with a given frequency
 - Here, we are going to drive a LED using a PWM (Pulse Width Modulation) signal, which will allow us to change the visible intensity of the LED
 - First read the wiki to learn more about the PWM configuration on STM32
   - Click 👉 [here](https://github.com/EPFL-MICRO-315/TPs-Student/wiki/STM32-PWM)
@@ -300,5 +300,5 @@ To understand how the code is generated, it is important to understand how the c
 >- Do you see a difference?
 >- What is the difference?
 >- When do we use a library instead of simply object files?
->- Understand what **ar** is really doing by looking to its definition under http://en.wikipedia.org
+>- Understand what **ar** is really doing by looking to its definition under https://en.wikipedia.org/wiki/Ar_(Unix)
 >- 💡 Hint: If your program (that includes the library) doesn't work, it might be that you did a mistake in your library.
