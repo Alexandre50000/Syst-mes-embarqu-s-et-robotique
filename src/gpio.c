@@ -75,3 +75,23 @@ bool gpio_read(GPIO_TypeDef *port, unsigned int pin)
 {
     return (port->IDR & (1<<pin));
 }
+
+void gpio_config_output_af_pushpull(GPIO_TypeDef *port, unsigned int pin){
+    // Output type pushpull : OTy = 0
+    port->OTYPER &= ~(1 << pin);
+
+    // Output data low : ODRy = 0
+    port->ODR &= ~(1 << pin);
+
+    // Floating, no pull-up/down : PUPDRy = 00
+    port->PUPDR &= ~(3 << (pin * 2));
+
+    // Output speed highest : OSPEEDRy = 11
+    port->OSPEEDR |= (3 << (pin * 2));
+
+    // Output mode : MODERy = 10 (AF)
+    port->MODER = (port->MODER & ~(3 << (pin * 2))) | (2 << (pin * 2));
+
+    // set AFRH at bit 24 0b10 to activate AF3
+    port->AFR[1] |= GPIO_AFRH_AFRH6_1 & ~(GPIO_AFRH_AFRH6_3 | GPIO_AFRH_AFRH6_2 | GPIO_AFRH_AFRH6_0); 
+}
