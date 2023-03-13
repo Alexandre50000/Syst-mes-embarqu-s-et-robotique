@@ -1,8 +1,8 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <stm32f4xx.h>
-#include <gpio.h>
-#include <motor.h>
+#include "gpio.h"
+#include "motor.h"
 
 #define TIMER_CLOCK         84000000
 #define TIMER_FREQ          100000 // [Hz]
@@ -29,14 +29,14 @@
 *   Complete the right GPIO port and pin to be able to control the motors
 */
 #define MOTOR_RIGHT_A	GPIOE, 13
-#define MOTOR_RIGHT_B
-#define MOTOR_RIGHT_C
-#define MOTOR_RIGHT_D
+#define MOTOR_RIGHT_B   GPIOE, 12
+#define MOTOR_RIGHT_C   GPIOE, 14
+#define MOTOR_RIGHT_D   GPIOE, 15
 
-#define MOTOR_LEFT_A
-#define MOTOR_LEFT_B
-#define MOTOR_LEFT_C
-#define MOTOR_LEFT_D
+#define MOTOR_LEFT_A    GPIOE, 8
+#define MOTOR_LEFT_B    GPIOE, 9
+#define MOTOR_LEFT_C    GPIOE, 11
+#define MOTOR_LEFT_D    GPIOE, 10
 
 
 /*
@@ -45,12 +45,12 @@
 *   step_halt is an array contaning 4 elements describing the state when the motors are off.
 *   step_table is an array of 4 lines of 4 elements. Each line describes a step.
 */
-static const uint8_t step_halt[NB_OF_PHASES] = {, , , };
+static const uint8_t step_halt[NB_OF_PHASES] = {0, 0, 0, 0};
 static const uint8_t step_table[NSTEP_ONE_EL_TURN][NB_OF_PHASES] = {
-    {, , , },
-    {, , , },
-    {, , , },
-    {, , , },
+    {0, 1, 1, 0},
+    {0, 1, 0, 1},
+    {1, 0, 0, 1},
+    {1, 0, 1, 0},
 };
 
 /*
@@ -68,6 +68,31 @@ static const uint8_t step_table[NSTEP_ONE_EL_TURN][NB_OF_PHASES] = {
 */
 void motor_init(void)
 {
+    // Enable clock timers (6&7)
+    RRC->APB1ENR |= MOTOR_LEFT_TIMER_EN;
+    RRC->APB1ENR |= MOTOR_RIGHT_TIMER_EN;
+
+    // Enable interrupt table
+    MOTOR_LEFT_IRQHandler(MOTOR_LEFT_IRQ);
+    MOTOR_RIGHT_IRQHandler(MOTOR_RIGHT_IRQ);
+
+    // Configure timers
+    // Prescaler:
+    MOTOR_LEFT_TIMER->PSC = 840 - 1; // 84 MHz / 840 -> 100 kHZ
+    MOTOR_RIGHT_TIMER->PSC = 840 - 1;
+    // Max counter
+    MOTOR_LEFT_TIMER->ARR = 10 - 1; // Count max 10 -> 100 kHz
+    MOTOR_RIGHT_TIMER->ARR = 10 - 1;
+    // Enable update interrupt
+    MOTOR_LEFT_TIMER->DIER |= TIM_DIER_UIE;          // Enable update interrupt
+    MOTOR_RIGHT_TIMER->DIER |= TIM_DIER_UIE;          // Enable update interrupt
+    // Enable timer
+    MOTOR_LEFT_TIMER->CR1 |= TIM_CR1_CEN; 
+    MOTOR_RIGHT_TIMER->CR1 |= TIM_CR1_CEN;           
+
+
+
+
 
 }
 
@@ -80,6 +105,33 @@ void motor_init(void)
 */
 static void right_motor_update(const uint8_t *out)
 {
+    if(out[0]){
+        gpio_set(MOTOR_RIGHT_A);
+    }
+    else{
+        gpio_clear(MOTOR_RIGHT_A);
+    }
+    
+    if(out[1]){
+        gpio_set(MOTOR_RIGHT_B);
+    }
+    else{
+        gpio_clear(MOTOR_RIGHT_B);
+    }
+    
+    if(out[2]){
+        gpio_set(MOTOR_RIGHT_C);
+    }
+    else{
+        gpio_clear(MOTOR_RIGHT_C);
+    }
+    
+    if(out[3]){
+        gpio_set(MOTOR_RIGHT_D);
+    }
+    else{
+        gpio_clear(MOTOR_RIGHT_D);
+    }
 
 }
 
@@ -92,6 +144,34 @@ static void right_motor_update(const uint8_t *out)
 */
 static void left_motor_update(const uint8_t *out)
 {
+    if(out[0]){
+        gpio_set(MOTOR_LEFT_A);
+    }
+    else{
+        gpio_clear(MOTOR_LEFT_A);
+    }
+    
+    if(out[1]){
+        gpio_set(MOTOR_LEFT_B);
+    }
+    else{
+        gpio_clear(MOTOR_LEFT_B);
+    }
+    
+    if(out[2]){
+        gpio_set(MOTOR_LEFT_C);
+    }
+    else{
+        gpio_clear(MOTOR_LEFT_C);
+    }
+    
+    if(out[3]){
+        gpio_set(MOTOR_LEFT_D);
+    }
+    else{
+        gpio_clear(MOTOR_LEFT_D);
+    }
+
 
 }
 
@@ -104,6 +184,17 @@ static void left_motor_update(const uint8_t *out)
 */
 void motor_stop(void)
 {
+    gpio_clear(MOTOR_RIGHT_A);
+    gpio_clear(MOTOR_RIGHT_B);
+    gpio_clear(MOTOR_RIGHT_C);
+    gpio_clear(MOTOR_RIGHT_D);
+    gpio_clear(MOTOR_LEFT_A);
+    gpio_clear(MOTOR_LEFT_B);
+    gpio_clear(MOTOR_LEFT_C);
+    gpio_clear(MOTOR_LEFT_D);
+
+    MOTOR_LEFT_TIMER->ARR = 0;
+    MOTOR_RIGHT_TIMER->ARR = 0;
 
 }
 
@@ -132,6 +223,12 @@ void motor_set_position(float position_r, float position_l, float speed_r, float
 */
 void motor_set_speed(float speed_r, float speed_l)
 {
+    if(speed_r > 13) speed_r=13;
+    if(speed_l > 13) speed_l=13;
+
+    //needs 4000 cylcles per second for max speed
+
+
 
 }
 
