@@ -27,6 +27,12 @@
 
 static int16_t right_speed = 0; // in step/s
 static int16_t left_speed = 0; // in step/s
+static int16_t position_left = 0; // in steps
+static int16_t position_right = 0; // in steps
+static int16_t count_l = 0; // in steps
+static int16_t count_r = 0; // in steps
+static int16_t POSITION_REACHED_R = 0;
+static int16_t POSITION_REACHED_L = 0;
 
 
 /*
@@ -218,37 +224,18 @@ void motor_stop(void)
 */
 void motor_set_position(float position_r, float position_l, float speed_r, float speed_l)
 {
+    POSITION_REACHED_L = 0;
+    POSITION_REACHED_R = 0;
+    count_l = 0;
+    count_r = 0;
+    position_left = position_l * NSTEP_ONE_TURN/ WHEEL_PERIMETER;
+    position_right = position_r * NSTEP_ONE_TURN/ WHEEL_PERIMETER;
+    count_l = position_left;
+    count_r = position_right;
+
     motor_set_speed(speed_r,speed_l);
 
-    float tim_r, tim_l;
-
-    tim_r = position_r/speed_r;
-    tim_l = position_l/speed_l;
-    tim_r *= 1000;
-    tim_l *= 1000;
-    bool working = true;
-
-    while(working){
-        if(tim_r <= 0){
-            right_motor_update(step_halt);
-            MOTOR_RIGHT_TIMER->ARR = 0;
-        }
-        if(tim_l <= 0){
-            left_motor_update(step_halt);
-            MOTOR_LEFT_TIMER->ARR = 0;
-        }
-        if((tim_l <= 0) & (tim_r <= 0)){
-            working = false;
-        }
-        tim_l -= 1;
-        tim_r -= 1;
-        for(int i=0; i < 168000; ++i){
-            asm("nop");
-        }
-
-    }
-    motor_stop();
-
+    while(!(POSITION_REACHED_L && POSITION_REACHED_R));
 
 }
 
@@ -266,17 +253,18 @@ void motor_set_position(float position_r, float position_l, float speed_r, float
 void motor_set_speed(float speed_r, float speed_l)
 {
     if(speed_r > 13) speed_r= MOTOR_SPEED_LIMIT;
+    else if(speed_r < -13) speed_r = -MOTOR_SPEED_LIMIT;
     if(speed_l > 13) speed_l= MOTOR_SPEED_LIMIT;
+    else if(speed_l < -13) speed_l = -MOTOR_SPEED_LIMIT;
 
     //needs 1000 cycles per second for max speed
     // 13 cm/s = 1000 khz, 
-    int count_r, count_l;
+    
+    right_speed = speed_r * NSTEP_ONE_TURN/ WHEEL_PERIMETER;
+    left_speed = speed_l * NSTEP_ONE_TURN/ WHEEL_PERIMETER;
 
-    count_r = speed_r * NSTEP_ONE_TURN/ WHEEL_PERIMETER;
-    count_l = speed_l * NSTEP_ONE_TURN/ WHEEL_PERIMETER;
-
-    MOTOR_LEFT_TIMER->ARR = (TIMER_FREQ/ abs(count_r)) - 1;
-    MOTOR_RIGHT_TIMER->ARR = (TIMER_FREQ/ abs(count_l)) - 1;
+    MOTOR_LEFT_TIMER->ARR = (TIMER_FREQ/ abs(right_speed)) - 1;
+    MOTOR_RIGHT_TIMER->ARR = (TIMER_FREQ/ abs(left_speed)) - 1;
 
 
 }
@@ -302,9 +290,27 @@ void MOTOR_RIGHT_IRQHandler(void)
     *
     */
    static uint8_t i = 0;
-    i = (i+1) & 3;
-
-	right_motor_update(step_table[i]);
+   if (count_r == 0){
+    POSITION_REACHED_R = 1;
+    count_r = 0;
+    right_motor_update(step_halt);
+    MOTOR_RIGHT_TIMER->ARR = 0;
+   }
+   else{
+    if(right_speed> 0){
+        i = (i+1) & 3;
+        right_motor_update(step_table[i]);
+        --count_r;
+    }
+    else if (right_speed < 0){
+        i = (i-1) & 3;
+        right_motor_update(step_table[i]);
+        ++count_r;
+    }
+    else{
+        right_motor_update(step_halt);
+    }
+   }
     
 
 	// Clear interrupt flag
@@ -333,11 +339,32 @@ void MOTOR_LEFT_IRQHandler(void)
     *   As tested, only the workaround 3 is working well, then read back of CR must be done before leaving the ISR
     *
     */
-
-	static uint8_t i = 0;
-    i = (i+1) & 3;
+   static uint8_t i = 0;
+   if (count_l == 0){
+    POSITION_REACHED_L = 1;
+    count_l = 0;
+    left_motor_update(step_halt);
+    MOTOR_LEFT_TIMER->ARR = 0;
+   }
+   else{
+    if(left_speed> 0){
+        i = (i+1) & 3;
+        left_motor_update(step_table[i]);
+        --count_l;
+    }
+    else if (left_speed < 0){
+        i = (i-1) & 3;
+        left_motor_update(step_table[i]);
+        ++count_l;
+    }
+    else{
+        left_motor_update(step_halt);
+    }
+   }
+	
     
-    left_motor_update(step_table[i]);
+    
+    
 
 
 	// Clear interrupt flag

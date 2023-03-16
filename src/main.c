@@ -29,6 +29,8 @@ int main(void)
     SystemClock_Config();
     RCC->AHB1ENR    |= RCC_AHB1ENR_GPIOEEN | RCC_AHB1ENR_GPIODEN;
     motor_init();
-    motor_set_position(10, 10, 5, 5);
+    motor_set_position(20, 20, 8, 8);
+    motor_set_position(PI*WHEEL_DISTANCE/2, -PI*WHEEL_DISTANCE/2, 8, -8);
+    motor_set_position(20, 20, 8, 8);
 }
 
