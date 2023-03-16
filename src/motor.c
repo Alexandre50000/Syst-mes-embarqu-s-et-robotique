@@ -81,7 +81,7 @@ void motor_init(void)
     MOTOR_LEFT_TIMER->PSC = 840 - 1; // 84 MHz / 840 -> 100 kHZ
     MOTOR_RIGHT_TIMER->PSC = 840 - 1;
     // Max counter
-    MOTOR_LEFT_TIMER->ARR = 25 - 1; // Count max 25 -> 4 kHz
+    MOTOR_LEFT_TIMER->ARR = 100 - 1; // Count max 100 -> 1 kHz
     MOTOR_RIGHT_TIMER->ARR = 25 - 1;
     // Enable update interrupt
     MOTOR_LEFT_TIMER->DIER |= TIM_DIER_UIE;          // Enable update interrupt
@@ -184,18 +184,11 @@ static void left_motor_update(const uint8_t *out)
 */
 void motor_stop(void)
 {
-    gpio_clear(MOTOR_RIGHT_A);
-    gpio_clear(MOTOR_RIGHT_B);
-    gpio_clear(MOTOR_RIGHT_C);
-    gpio_clear(MOTOR_RIGHT_D);
-    gpio_clear(MOTOR_LEFT_A);
-    gpio_clear(MOTOR_LEFT_B);
-    gpio_clear(MOTOR_LEFT_C);
-    gpio_clear(MOTOR_LEFT_D);
+    left_motor_update(step_halt);
+    right_motor_update(step_halt);
 
     MOTOR_LEFT_TIMER->ARR = 0;
     MOTOR_RIGHT_TIMER->ARR = 0;
-
 }
 
 /*
@@ -214,9 +207,10 @@ void motor_set_position(float position_r, float position_l, float speed_r, float
     tim_r = position_r/speed_r;
     tim_l = position_l/speed_l;
 
-    
+    int maxi;
 
-    
+
+    motor_stop();
 
 
 }
@@ -237,15 +231,15 @@ void motor_set_speed(float speed_r, float speed_l)
     if(speed_r > 13) speed_r= MOTOR_SPEED_LIMIT;
     if(speed_l > 13) speed_l= MOTOR_SPEED_LIMIT;
 
-    //needs 4000 cycles per second for max speed
-    // 13 cm/s = 4000 khz, 
+    //needs 1000 cycles per second for max speed
+    // 13 cm/s = 1000 khz, 
     float div_r, div_l;
     int count_r, count_l;
     div_r =  speed_r / MOTOR_SPEED_LIMIT;
     div_l = speed_l / MOTOR_SPEED_LIMIT;
 
-    count_r = 25 / div_r;
-    count_l = 25 / div_l;
+    count_r = 100 / div_r;
+    count_l = 100 / div_l;
 
     MOTOR_LEFT_TIMER->ARR = count_r - 1;
     MOTOR_RIGHT_TIMER->ARR = count_l - 1;
@@ -274,9 +268,12 @@ void MOTOR_RIGHT_IRQHandler(void)
     *
     */
 
-	/* do something ... */
+	for (int i; i < NSTEP_ONE_EL_TURN; ++i){
+        right_motor_update(step_table[i]);
+    }
 
 	// Clear interrupt flag
+
 	MOTOR_RIGHT_TIMER->SR &= ~TIM_SR_UIF;
 	MOTOR_RIGHT_TIMER->SR;	// Read back in order to ensure the effective IF clearing
 }
@@ -302,7 +299,9 @@ void MOTOR_LEFT_IRQHandler(void)
     *
     */
 
-	/* do something ... */
+	for (int i; i < NSTEP_ONE_EL_TURN; ++i){
+        left_motor_update(step_table[i]);
+    }
 
 	// Clear interrupt flag
     MOTOR_LEFT_TIMER->SR &= ~TIM_SR_UIF;
