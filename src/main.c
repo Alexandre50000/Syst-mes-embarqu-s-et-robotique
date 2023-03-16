@@ -1,9 +1,9 @@
 #include <stm32f4xx.h>
 #include <system_clock_config.h>
-#include <gpio.h>
-#include <main.h>
-#include <timer.h>
-#include <motor.h>
+#include "gpio.h"
+#include "main.h"
+#include "timer.h"
+#include "motor.h"
 #include "selector.h"
 
 
@@ -26,12 +26,9 @@ void delay(unsigned int n)
 
 int main(void)
 {
-
     SystemClock_Config();
     RCC->AHB1ENR    |= RCC_AHB1ENR_GPIOEEN | RCC_AHB1ENR_GPIODEN;
-    
-    
-    while(1){
-        }
+    motor_init();
+    motor_set_position(10, 10, 5, 5);
 }
 

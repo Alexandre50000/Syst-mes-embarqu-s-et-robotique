@@ -23,6 +23,12 @@
 #define MOTOR_LEFT_IRQ          TIM7_IRQn
 #define MOTOR_LEFT_IRQHandler   TIM7_IRQHandler
 
+// static variables
+
+static int16_t right_speed = 0; // in step/s
+static int16_t left_speed = 0; // in step/s
+
+
 /*
 *
 *   TO COMPLETE
@@ -69,20 +75,32 @@ static const uint8_t step_table[NSTEP_ONE_EL_TURN][NB_OF_PHASES] = {
 void motor_init(void)
 {
     // Enable clock timers (6&7)
-    RRC->APB1ENR |= MOTOR_LEFT_TIMER_EN;
-    RRC->APB1ENR |= MOTOR_RIGHT_TIMER_EN;
+    RCC->APB1ENR |= MOTOR_LEFT_TIMER_EN;
+    RCC->APB1ENR |= MOTOR_RIGHT_TIMER_EN;
+
+    // configure pins
+    gpio_config_output_pushpull(MOTOR_RIGHT_A);
+    gpio_config_output_pushpull(MOTOR_RIGHT_B);
+    gpio_config_output_pushpull(MOTOR_RIGHT_C);
+    gpio_config_output_pushpull(MOTOR_RIGHT_D);
+
+    
+    gpio_config_output_pushpull(MOTOR_LEFT_A);
+    gpio_config_output_pushpull(MOTOR_LEFT_B);
+    gpio_config_output_pushpull(MOTOR_LEFT_C);
+    gpio_config_output_pushpull(MOTOR_LEFT_D);
 
     // Enable interrupt table
-    MOTOR_LEFT_IRQHandler(MOTOR_LEFT_IRQ);
-    MOTOR_RIGHT_IRQHandler(MOTOR_RIGHT_IRQ);
+    NVIC_EnableIRQ(MOTOR_LEFT_IRQ);
+    NVIC_EnableIRQ(MOTOR_RIGHT_IRQ);
 
     // Configure timers
     // Prescaler:
-    MOTOR_LEFT_TIMER->PSC = 840 - 1; // 84 MHz / 840 -> 100 kHZ
-    MOTOR_RIGHT_TIMER->PSC = 840 - 1;
+    MOTOR_LEFT_TIMER->PSC = (TIMER_CLOCK/TIMER_FREQ) - 1;
+    MOTOR_RIGHT_TIMER->PSC = (TIMER_CLOCK/TIMER_FREQ)  - 1;
     // Max counter
-    MOTOR_LEFT_TIMER->ARR = 100 - 1; // Count max 100 -> 1 kHz
-    MOTOR_RIGHT_TIMER->ARR = 25 - 1;
+    MOTOR_LEFT_TIMER->ARR = 0; // Count max 100 -> 1 kHz
+    MOTOR_RIGHT_TIMER->ARR = 0;
     // Enable update interrupt
     MOTOR_LEFT_TIMER->DIER |= TIM_DIER_UIE;          // Enable update interrupt
     MOTOR_RIGHT_TIMER->DIER |= TIM_DIER_UIE;          // Enable update interrupt
@@ -202,14 +220,33 @@ void motor_set_position(float position_r, float position_l, float speed_r, float
 {
     motor_set_speed(speed_r,speed_l);
 
-    int tim_r, tim_l;
+    float tim_r, tim_l;
 
     tim_r = position_r/speed_r;
     tim_l = position_l/speed_l;
+    tim_r *= 1000;
+    tim_l *= 1000;
+    bool working = true;
 
-    int maxi;
+    while(working){
+        if(tim_r <= 0){
+            right_motor_update(step_halt);
+            MOTOR_RIGHT_TIMER->ARR = 0;
+        }
+        if(tim_l <= 0){
+            left_motor_update(step_halt);
+            MOTOR_LEFT_TIMER->ARR = 0;
+        }
+        if((tim_l <= 0) & (tim_r <= 0)){
+            working = false;
+        }
+        tim_l -= 1;
+        tim_r -= 1;
+        for(int i=0; i < 168000; ++i){
+            asm("nop");
+        }
 
-
+    }
     motor_stop();
 
 
@@ -233,16 +270,13 @@ void motor_set_speed(float speed_r, float speed_l)
 
     //needs 1000 cycles per second for max speed
     // 13 cm/s = 1000 khz, 
-    float div_r, div_l;
     int count_r, count_l;
-    div_r =  speed_r / MOTOR_SPEED_LIMIT;
-    div_l = speed_l / MOTOR_SPEED_LIMIT;
 
-    count_r = 100 / div_r;
-    count_l = 100 / div_l;
+    count_r = speed_r * NSTEP_ONE_TURN/ WHEEL_PERIMETER;
+    count_l = speed_l * NSTEP_ONE_TURN/ WHEEL_PERIMETER;
 
-    MOTOR_LEFT_TIMER->ARR = count_r - 1;
-    MOTOR_RIGHT_TIMER->ARR = count_l - 1;
+    MOTOR_LEFT_TIMER->ARR = (TIMER_FREQ/ abs(count_r)) - 1;
+    MOTOR_RIGHT_TIMER->ARR = (TIMER_FREQ/ abs(count_l)) - 1;
 
 
 }
@@ -267,10 +301,11 @@ void MOTOR_RIGHT_IRQHandler(void)
     *   As tested, only the workaround 3 is working well, then read back of CR must be done before leaving the ISR
     *
     */
+   static uint8_t i = 0;
+    i = (i+1) & 3;
 
-	for (int i; i < NSTEP_ONE_EL_TURN; ++i){
-        right_motor_update(step_table[i]);
-    }
+	right_motor_update(step_table[i]);
+    
 
 	// Clear interrupt flag
 
@@ -299,9 +334,11 @@ void MOTOR_LEFT_IRQHandler(void)
     *
     */
 
-	for (int i; i < NSTEP_ONE_EL_TURN; ++i){
-        left_motor_update(step_table[i]);
-    }
+	static uint8_t i = 0;
+    i = (i+1) & 3;
+    
+    left_motor_update(step_table[i]);
+
 
 	// Clear interrupt flag
     MOTOR_LEFT_TIMER->SR &= ~TIM_SR_UIF;
