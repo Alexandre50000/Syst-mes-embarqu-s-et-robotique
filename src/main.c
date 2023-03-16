@@ -28,7 +28,7 @@ int main(void)
 {
 
     SystemClock_Config();
-    RCC->AHB1ENR    |= RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIODEN;
+    RCC->AHB1ENR    |= RCC_AHB1ENR_GPIOEEN | RCC_AHB1ENR_GPIODEN;
     
     
     while(1){

@@ -81,8 +81,8 @@ void motor_init(void)
     MOTOR_LEFT_TIMER->PSC = 840 - 1; // 84 MHz / 840 -> 100 kHZ
     MOTOR_RIGHT_TIMER->PSC = 840 - 1;
     // Max counter
-    MOTOR_LEFT_TIMER->ARR = 10 - 1; // Count max 10 -> 100 kHz
-    MOTOR_RIGHT_TIMER->ARR = 10 - 1;
+    MOTOR_LEFT_TIMER->ARR = 25 - 1; // Count max 25 -> 4 kHz
+    MOTOR_RIGHT_TIMER->ARR = 25 - 1;
     // Enable update interrupt
     MOTOR_LEFT_TIMER->DIER |= TIM_DIER_UIE;          // Enable update interrupt
     MOTOR_RIGHT_TIMER->DIER |= TIM_DIER_UIE;          // Enable update interrupt
@@ -207,6 +207,17 @@ void motor_stop(void)
 */
 void motor_set_position(float position_r, float position_l, float speed_r, float speed_l)
 {
+    motor_set_speed(speed_r,speed_l);
+
+    int tim_r, tim_l;
+
+    tim_r = position_r/speed_r;
+    tim_l = position_l/speed_l;
+
+    
+
+    
+
 
 }
 
@@ -223,11 +234,21 @@ void motor_set_position(float position_r, float position_l, float speed_r, float
 */
 void motor_set_speed(float speed_r, float speed_l)
 {
-    if(speed_r > 13) speed_r=13;
-    if(speed_l > 13) speed_l=13;
+    if(speed_r > 13) speed_r= MOTOR_SPEED_LIMIT;
+    if(speed_l > 13) speed_l= MOTOR_SPEED_LIMIT;
 
-    //needs 4000 cylcles per second for max speed
+    //needs 4000 cycles per second for max speed
+    // 13 cm/s = 4000 khz, 
+    float div_r, div_l;
+    int count_r, count_l;
+    div_r =  speed_r / MOTOR_SPEED_LIMIT;
+    div_l = speed_l / MOTOR_SPEED_LIMIT;
 
+    count_r = 25 / div_r;
+    count_l = 25 / div_l;
+
+    MOTOR_LEFT_TIMER->ARR = count_r - 1;
+    MOTOR_RIGHT_TIMER->ARR = count_l - 1;
 
 
 }
