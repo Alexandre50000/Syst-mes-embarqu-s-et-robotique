@@ -19,7 +19,7 @@
 - First of all those files takes place on the Github repository, which can greatly increase the downloading and uploading size per commit and unnecessarily polue everywhere (github.com and each local repositories)
 
 >***
->⚠ From now on, you should `ALWAYS` create a .gitignore and properly configure it
+>⚠ From now on, you should `ALWAYS create a .gitignore and properly configure it`
 >***
 
 - Fortunately this process is dead simple:
@@ -28,11 +28,11 @@
     - to ignore a precise file named `src/func/main.o`, simply add the folder path on a newline (simply `src/func/main.o`)
     - to ignore any file ending with .elf (like `main.elf`), simply add `*.elf`
 - To ignore the ST and the e-puck2_main-processor librairies, and all the build files, one's .gitignore should look like:
-    - either to [gitignore's content for TP1 or TP2](#gitignores-content-for-TPs-using-ST-library) if your code is using `ST library`
-    - or [gitignore's content for TP3 and following](#gitignores-content-for-TPs-using-e-puck2_main-processor-library) if your code is using `e-puck2_main-processor` library
+    - either to [gitignore's content for TP1 or TP2](#gitignores-content-for-tps-using-st-library) if your code is using `ST library`
+    - or to [gitignore's content for TP3 and following](#gitignores-content-for-tps-using-e-puck2_main-processor-library) if your code is using `e-puck2_main-processor` library
 
 >***
->⚠ Your code should **NEVER** use these 2 libraries simultaneously. It is really 2 different worlds to use the low level of the STM32F4 microcontroller
+>⚠ Your code should `NEVER use these 2 libraries simultaneously`. It is really 2 different worlds to use the low level of the STM32F4 microcontroller
 >***
 
 - >#### .gitignore's content for TPs using ST library
@@ -82,7 +82,7 @@
 # Part 1 - Read about RTOS and ChibiOS
 Read through ALL those 2 wiki pages:
 
-- [Generalities-about-RTOS](https://github.com/EPFL-MICRO-315/TPs-Student/wiki/ChibiOS-Generalities-about-RTOS)
+- [Generalities about RTOS](https://github.com/EPFL-MICRO-315/TPs-Student/wiki/ChibiOS-Generalities-about-RTOS)
 - [Presenting ChibiOS](https://github.com/EPFL-MICRO-315/TPs-Student/wiki/ChibiOS-Presenting-ChibiOS)
 # Part 2 - Multi-threaded blinky demo
 - The code provided to you does several things:
@@ -137,7 +137,7 @@ Read through ALL those 2 wiki pages:
 # Part 3 - Inertial Measurement Unit (IMU)
 ## Introduction
 - In this part of the practical, you are going to use the IMU sensor **MPU 9250** to measure the acceleration and angular speeds of the robot e-puck2
-- All the interfaces to get values from this sensor are already coded. The code uses the files **imu.*** to read the data of the IMU inside a thread. The functions to interact with the IMU are located in the **mpu9250.*** files and finally the functions used to communicate over the I2C bus are located in the **my\_i2c\_bus.*** files
+- All the interfaces to get values from this sensor are already coded. The code uses the files **imu.*** to read the data of the IMU inside a thread. The functions to interact with the IMU are located in the **mpu9250.*** files and finally the functions used to communicate over the I2C bus are located in the **i2c\_bus.*** files
 
 ## MessageBus
 - In the first TPs, you have probably used for instance global variables to transfer data between an interrupt routine and another function
