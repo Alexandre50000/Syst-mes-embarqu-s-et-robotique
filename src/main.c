@@ -159,7 +159,7 @@ int main(void)
     /*
     *   TASKS 3,4,5,6,7 : UNDERSTANDING THREADS ON CHIBIOS
     */
-    chThdCreateStatic(waThdFrontLed, sizeof(waThdFrontLed), NORMALPRIO, ThdFrontLed, NULL);
+    chThdCreateStatic(waThdFrontLed, sizeof(waThdFrontLed), NORMALPRIO+1, ThdFrontLed, NULL);
     chThdCreateStatic(waThdBodyLed, sizeof(waThdBodyLed), NORMALPRIO, ThdBodyLed, NULL);
 
     //to change the priority of the thread invoking the function. The main function in this case

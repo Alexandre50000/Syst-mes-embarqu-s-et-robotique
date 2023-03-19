@@ -105,6 +105,9 @@ Read through ALL those 2 wiki pages:
 > `Task 2`
 >- Compile and run the code on the e-puck2
 >- Why are the leds not blinking ?
+
+>- **Answer:** Because we need to activate the thread in main.
+
 >- Resolve the problem and verify that **BODY_LED** and **FRONT_LED** are blinking (**FRONT_LED** will blink too fast and will simply seem to be turned on)
 
 > `Task 3`
@@ -114,12 +117,17 @@ Read through ALL those 2 wiki pages:
 > `Task 4`
 >- Comment in the thread **ThdBodyLed** the first case (line 86) and uncomment the second case (lines 92-95)
 >- What is the difference ?
+
+>- **Answer:** The difference is that one uses ChibiOs to pause and the other we code the sleep function. We see that the **FRONTLED** blinking is visible this time. Which means that it cannot do other processes since it is doing nothing. This is why one should use the first case so the OS knows it doesn't need to stay in the thread for 500 ms, while in the second case the OS goes back to the thread BODYLED to do nothing for one tick.
+
 >- How does change the period of the led controlled by the other thread ? Why ?
 >- 💡 Hint : Look at **chconf.h** to understand what is happening
 
 > `Task 5`
 >- Increase the priority of **ThdFrontLed** by 1
 >- What has changed now ? Why ?
+
+>- ***Answer***: By changing the priority, we effectively told the OS to first finish the **FRONTLED** thread and then do the **BODYLED** thread. The difference is that before the OS went back and forth the threads and created extra time spent doing nothing (because of the nop) and deregulating the timing and period of the **FRONTLED** blinking.
 
 ## Critical thread zones
 - It would be useful to prevent the system to switch to another thread when we have critical zone that should imperatively be executed in one run
