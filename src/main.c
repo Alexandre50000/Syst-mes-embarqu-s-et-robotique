@@ -83,16 +83,23 @@ static THD_FUNCTION(ThdBodyLed, arg) {
         /*
         *   1st case :  pause the thread during 500ms
         */
-        chThdSleepMilliseconds(500);
+        //chThdSleepMilliseconds(500);
 
         /*
         *   2nd case :  make the thread work during the 500ms
         */
 
-        // //about 500ms at 168MHz
-        // for(uint32_t i = 0 ; i < 21000000 ; i++){
-        //     __asm__ volatile ("nop");
-        // }
+        //about 500ms at 168MHz,
+        //**Answer:** The difference is that one uses
+        //ChibiOs to pause and the other we code the sleep
+        //function. We see that the **FRONTLED** blinking is visible
+        //this time. Which means that it cannot do other processes since
+        //it is doing nothing. This is why one should use the first case so
+        //the OS knows it doesn't need to stay in the thread for 500 ms, while in
+        //the second case the OS goes back to the thread BODYLED to do nothing for one tick.
+         for(uint32_t i = 0 ; i < 21000000 ; i++){
+             __asm__ volatile ("nop");
+         }
 
         /*
         *   3rd case :  make the thread work during the 500ms
