@@ -140,6 +140,8 @@ Read through ALL those 2 wiki pages:
 >- Comment the case 2 (lines 92-95) and uncomment the case 3 (lines 102-106) in the thread **ThdBodyLed**
 >- What is the result ? Why should we not do this ?
 
+>- ***Answer:*** By locking the system, we are preventing the OS to go do other thread and essentially breaking the multi threaded princinple of ChibiOS. Here, the **FRONTLED** is not blinking at the right timing even if it higher priority. This is because everytime the processor goes to the **BODYLED** thread, it is locked in it for 500 ms, thus breaking the timing. One should not do this as it will break the timing wanted.
+
 - ⚠ After having answered the questions, comment again the case 3 and uncomment the case 1 in order to have a working code for the rest of the practical exercise
 
 # Part 3 - Inertial Measurement Unit (IMU)
