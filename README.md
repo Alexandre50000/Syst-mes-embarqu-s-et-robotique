@@ -118,7 +118,7 @@ Read through ALL those 2 wiki pages:
 >- Comment in the thread **ThdBodyLed** the first case (line 86) and uncomment the second case (lines 92-95)
 >- What is the difference ?
 
->- **Answer:** The difference is that one uses ChibiOs to pause and the other we code the sleep function. We see that the **FRONTLED** blinking is visible this time. Which means that it cannot do other processes since it is doing nothing. This is why one should use the first case so the OS knows it doesn't need to stay in the thread for 500 ms, while in the second case the OS goes back to the thread BODYLED to do nothing for one tick.
+>- **Answer:** The difference is that one uses ChibiOs to pause and the other we code the sleep function. We see that the **FRONTLED** blinking is visible this time. Which means that it cannot do other processes since it is doing nothing. This is why one should use the first case so the OS knows it doesn't need to stay in the thread for 500 ms, while in the second case the OS goes back to the thread BODYLED to do nothing for one tick. A thread is guaranteed to work for 20 ms (given by CH_CFG_TIME_QUANTUM in chconf.h) so it will not respect the timing.
 
 >- How does change the period of the led controlled by the other thread ? Why ?
 >- 💡 Hint : Look at **chconf.h** to understand what is happening

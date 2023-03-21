@@ -7,6 +7,14 @@
 #define STANDARD_GRAVITY    9.80665f
 #define DEG2RAD(deg) (deg / 180 * M_PI)
 
+#define RES_2G              2.0f
+#define RES_250DPS          250.0f 
+#define MAX_INT16           32768.0f
+
+#define ACC_RAW2G           (RES_2G / MAX_INT16) //2G scale for 32768 raw value
+#define GYRO_RAW2DPS        (RES_250DPS / MAX_INT16) //250DPS (degrees per second) scale for 32768 raw value
+
+
 extern messagebus_t bus;
 
 static imu_msg_t imu_values;
@@ -22,9 +30,12 @@ static bool imu_configured = false;
  * 			RAW gyroscope to rad/s speed
  */
 void imu_compute_units(void){
-	/*
-    *   TASK 10 : TO COMPLETE
-    */
+	for(uint8_t i = 0 ; i < NB_AXIS ; i++){
+    imu_values.acceleration[i] = ( (imu_values.acc_raw[i] - imu_values.acc_offset[i]) 
+                               * STANDARD_GRAVITY * ACC_RAW2G);
+    imu_values.gyro_rate[i] = ( (imu_values.gyro_raw[i] - imu_values.gyro_offset[i]) 
+                            * DEG2RAD(GYRO_RAW2DPS) );
+  }
 }
 
  /**
@@ -97,9 +108,25 @@ void imu_stop(void) {
 
 void imu_compute_offset(messagebus_topic_t * imu_topic, uint16_t nb_samples){
 
-    /*
-    *   TASK 9 : TO COMPLETE
-    */
+    int32_t temp_acc_offset[NB_AXIS] = {0};
+	int32_t temp_gyro_offset[NB_AXIS] = {0};
+
+	for(uint16_t i = 0; i < nb_samples ; i++){
+		messagebus_topic_wait(imu_topic, &imu_values, sizeof(imu_values));
+		for(uint8_t j = 0; j < NB_AXIS ; j++){
+			temp_acc_offset[j] += imu_values.acc_raw[j];
+			temp_gyro_offset[j] += imu_values.gyro_raw[j];
+		}
+	}
+
+	for(uint8_t j = 0; j < NB_AXIS ; j++){
+		temp_acc_offset[j] /= nb_samples;
+		temp_gyro_offset[j] /= nb_samples;
+
+		imu_values.acc_offset[j] = temp_acc_offset[j];
+		imu_values.gyro_offset[j] = temp_gyro_offset[j];
+	}
+	imu_values.acc_offset[Z_AXIS] += (MAX_INT16 / RES_2G);
 }
 
 int16_t get_acc(uint8_t axis) {
