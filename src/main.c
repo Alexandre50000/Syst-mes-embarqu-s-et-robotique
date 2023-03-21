@@ -112,6 +112,14 @@ void show_gravity(imu_msg_t *imu_values){
     //variable to measure the time some functions take
     //volatile to not be optimized out by the compiler if not used
     volatile uint16_t time = 0;
+    uint8_t led1=0, led3=0, led5=0, led7=0;
+    float threshold = 2.5;
+
+    float *accel = imu_values->acceleration;
+
+
+
+    
 
     /*
     *   Use this to reset the timer counter and prevent the system
@@ -127,12 +135,30 @@ void show_gravity(imu_msg_t *imu_values){
     *   the system to switch to another thread.
     *   Place it at the end of the code you want to measure
     */
+   if(accel[X_AXIS]< -threshold){
+        led3 = 1;
+   }
+   else if(accel[X_AXIS] > threshold){
+        led7 = 1;
+   }
+   
+   if(accel[Y_AXIS]< -threshold){
+        led1 = 1;
+   }
+   else if(accel[Y_AXIS] > threshold){
+        led5 = 1;
+   }
+
+
     time = GPTD11.tim->CNT;
     chSysUnlock();
+    chprintf((BaseSequentialStream *)&SD3, "Time taken:%.2fus\n", time);
+    
 
-    /*
-    *   TASK 11 : TO COMPLETE
-    */
+    palWritePad(GPIOD, GPIOD_LED1, led1 ? 0 : 1);
+    palWritePad(GPIOD, GPIOD_LED3, led3 ? 0 : 1);
+    palWritePad(GPIOD, GPIOD_LED5, led5 ? 0 : 1);
+    palWritePad(GPIOD, GPIOD_LED7, led7 ? 0 : 1);
 
 }
 
