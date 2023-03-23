@@ -7,8 +7,11 @@
 #include "process_image.h"
 #include "main.h"
 
+#define GREEN_MASK_FIRST 0b11100000
+#define GREEN_MASK_SECOND 0b111
 
 static float distance_cm = 0;
+
 
 //semaphore
 static BSEMAPHORE_DECL(image_ready_sem, TRUE);
@@ -54,8 +57,15 @@ static THD_FUNCTION(ProcessImage, arg) {
 		/*
 		*	To complete
 		*/
+		for(uint16_t i=0; i < 2*IMAGE_BUFFER_SIZE; i=i+2){
+			image[i/2] = ((img_buff_ptr[i] & 0b11111000) >> 2);
+		}
+		SendUint8ToComputer(image,sizeof(image));
+		chThdSleepMilliseconds(10);
+		}
+
     }
-}
+
 
 float get_distance_cm(void){
 	return distance_cm;
