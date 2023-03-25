@@ -78,7 +78,7 @@ uint16_t get_width(uint8_t* data){
 	uint8_t average=0;
 	uint16_t count=0, width=0, begin=0, end=0, i=0;
 	bool stop=0, line_not_found=0, wrong_line=0;
-	static uint16_t last_width = CONV_PX_CM/10;
+	static uint16_t last_width = CONV_PX_CM/GOAL_DISTANCE;
 
 	for(uint16_t i=0; i < IMAGE_BUFFER_SIZE; ++i){
 		count += data[i];
@@ -137,6 +137,10 @@ uint16_t get_width(uint8_t* data){
 
 float get_distance_cm(){
 	return distance_cm;
+}
+
+uint16_t get_line_pos(){
+	return line_pos;
 }
 
 void process_image_start(void){

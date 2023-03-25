@@ -15,6 +15,7 @@ extern "C" {
 #define SLOPE_WIDTH 5
 #define MIN_LINE_WIDTH 40
 #define CONV_PX_CM 1560.0f
+#define GOAL_DISTANCE 10
 
 /** Robot wide IPC bus. */
 extern messagebus_t bus;

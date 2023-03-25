@@ -7,6 +7,7 @@
 #define USED_LINE 200   // Must be inside [0..478], according to the above explanations 
 
 float get_distance_cm(void);
+uint16_t get_line_pos(void);
 void process_image_start(void);
 uint16_t get_width(uint8_t* data);
 
