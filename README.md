@@ -154,6 +154,9 @@ This solution is interesting because it only requires the use of a Python script
 > `Task 3`
 >- Add a sleep duration of 12ms into the thread `CaptureImage` to see the desynchronization
 >- Is the new capture time coherent ? 
+
+>- **ANSWER**: It is not, it added an extra 16 milliseconds.
+
 >- **Do not forget to remove the thread sleep afterward in order to have a working function for the next tasks**
 
 > `Task 4`

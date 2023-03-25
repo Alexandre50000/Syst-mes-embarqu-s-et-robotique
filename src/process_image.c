@@ -7,8 +7,6 @@
 #include "process_image.h"
 #include "main.h"
 
-#define GREEN_MASK_FIRST 0b11100000
-#define GREEN_MASK_SECOND 0b111
 
 static float distance_cm = 0;
 
@@ -29,15 +27,13 @@ static THD_FUNCTION(CaptureImage, arg) {
 	dcmi_prepare();
 	systime_t time = 0;
     while(1){
-		time = 0;
-		time = chVTGetSystemTime();
         //starts a capture
 		dcmi_capture_start();
 		//waits for the capture to be done
 
 		wait_image_ready();
-		chprintf((BaseSequentialStream *)&SD3, "Time= %dms \n \n",chVTGetSystemTime()-time);
 		//signals an image has been captured
+		chThdSleepMilliseconds(12);
 		chBSemSignal(&image_ready_sem);  
     }
 }
@@ -62,12 +58,32 @@ static THD_FUNCTION(ProcessImage, arg) {
 		*	To complete
 		*/
 		for(uint16_t i=0; i < 2*IMAGE_BUFFER_SIZE; i=i+2){
-			image[i/2] = ((img_buff_ptr[i] & 0b11111000) >> 3);
+			image[i/2] = ((img_buff_ptr[i] & 0b00000111) << 3) | ((img_buff_ptr[i+1] & 0b11100000) >> 5);
 		}
-		chThdSleepMilliseconds(10);
+		
+		chprintf((BaseSequentialStream *)&SD3, "Width= %d pixels \n \n",get_width(image));
+
 		}
 
     }
+
+uint16_t get_width(uint8_t* data){
+	uint8_t average=0;
+	uint16_t count=0;
+	uint16_t width=0;
+
+	for(uint16_t i=0; i < IMAGE_BUFFER_SIZE; ++i){
+		count += data[i];
+	}
+	average = count/IMAGE_BUFFER_SIZE;
+
+	for(uint16_t i=0; i < IMAGE_BUFFER_SIZE; ++i){
+		if(data[i] < average){
+			width += 1;
+		}
+	}
+	return width;
+}
 
 
 float get_distance_cm(void){
