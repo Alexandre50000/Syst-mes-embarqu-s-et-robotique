@@ -12,6 +12,9 @@ extern "C" {
 
 //constants for the differents parts of the project
 #define IMAGE_BUFFER_SIZE		640
+#define SLOPE_WIDTH 5
+#define MIN_LINE_WIDTH 40
+#define CONV_PX_CM 1560.0f
 
 /** Robot wide IPC bus. */
 extern messagebus_t bus;

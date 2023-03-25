@@ -9,6 +9,7 @@
 
 
 static float distance_cm = 0;
+static uint16_t line_pos = IMAGE_BUFFER_SIZE/2;
 
 
 //semaphore
@@ -60,8 +61,14 @@ static THD_FUNCTION(ProcessImage, arg) {
 		for(uint16_t i=0; i < 2*IMAGE_BUFFER_SIZE; i=i+2){
 			image[i/2] = ((img_buff_ptr[i] & 0b00000111) << 3) | ((img_buff_ptr[i+1] & 0b11100000) >> 5);
 		}
+
+		uint16_t linewidth=0;
+		linewidth = get_width(image);
+		distance_cm = CONV_PX_CM/(float)linewidth;
+
+
 		
-		chprintf((BaseSequentialStream *)&SD3, "Width= %d pixels \n \n",get_width(image));
+		chprintf((BaseSequentialStream *)&SD3, "Distance= %2f cm  Pixel Width= %d \n",distance_cm, linewidth);
 
 		}
 
@@ -69,24 +76,66 @@ static THD_FUNCTION(ProcessImage, arg) {
 
 uint16_t get_width(uint8_t* data){
 	uint8_t average=0;
-	uint16_t count=0;
-	uint16_t width=0;
+	uint16_t count=0, width=0, begin=0, end=0, i=0;
+	bool stop=0, line_not_found=0, wrong_line=0;
+	static uint16_t last_width = CONV_PX_CM/10;
 
 	for(uint16_t i=0; i < IMAGE_BUFFER_SIZE; ++i){
 		count += data[i];
 	}
 	average = count/IMAGE_BUFFER_SIZE;
 
-	for(uint16_t i=0; i < IMAGE_BUFFER_SIZE; ++i){
-		if(data[i] < average){
-			width += 1;
+	do{
+		wrong_line = 0;
+		while(stop==0 && i < (IMAGE_BUFFER_SIZE-SLOPE_WIDTH)){
+			if(data[i] > average &&  data[i+SLOPE_WIDTH] < average){
+				begin = i;
+				stop = 1;
+			}
+			++i;
 		}
+		if(i <(IMAGE_BUFFER_SIZE-SLOPE_WIDTH) && begin){
+			stop = 0;
+			while(stop==0 && i < (IMAGE_BUFFER_SIZE-SLOPE_WIDTH)){
+				if(data[i]< average && data[i+SLOPE_WIDTH] > average){
+					stop=1;
+					end=i;
+				}
+				++i;
+
+			}
+			if(i>IMAGE_BUFFER_SIZE || end ==0){
+			line_not_found=1;
+			}
+
+		}
+		else{
+			line_not_found=1;
+		}
+		
+		if(!line_not_found && (end-begin)<MIN_LINE_WIDTH){
+			i = end;
+			begin=0;
+			end=0;
+			stop=0;
+			wrong_line= 1;
+			}
+	}while(wrong_line);
+
+	if(line_not_found) {
+		begin = 0;
+		end = 0;
+		width = last_width;
+	}
+	else{
+		last_width = width = (end-begin);
+		line_pos = (end+begin)/2;
 	}
 	return width;
 }
 
 
-float get_distance_cm(void){
+float get_distance_cm(){
 	return distance_cm;
 }
 
