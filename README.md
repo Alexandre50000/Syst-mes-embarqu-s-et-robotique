@@ -131,6 +131,9 @@ You can receive this page, already printed and cut, at the beginning of the TP, 
 >- This measure uses the system tick of ChibiOS, so it counts in milliseconds
 >- As you don't need to be more precise, you can use it instead of a timer which is more precise
 >- What happens to the capture time if you cover the camera with your hand ?
+
+>- **ANSWER**: If you cover the camera with your hand, the epuck takes more time to take an
+
 >- 💡 Hint : You can use **chprintf()** to send some variables to the computer in order to know if your function works well or not
 >- Since you already are sending the images to the computer through the UART3 of the MCU with the dedicated functions showed before, you have 3 choices to use **chprintf()** :
 >   1) Stop to send the images from the MCU and therefore stop the Python script on the computer side (close too the used serial port).    

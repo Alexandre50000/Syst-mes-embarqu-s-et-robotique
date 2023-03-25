@@ -27,14 +27,18 @@ static THD_FUNCTION(CaptureImage, arg) {
 	dcmi_enable_double_buffering();
 	dcmi_set_capture_mode(CAPTURE_ONE_SHOT);
 	dcmi_prepare();
-
+	systime_t time = 0;
     while(1){
+		time = 0;
+		time = chVTGetSystemTime();
         //starts a capture
 		dcmi_capture_start();
 		//waits for the capture to be done
+
 		wait_image_ready();
+		chprintf((BaseSequentialStream *)&SD3, "Time= %dms \n \n",chVTGetSystemTime()-time);
 		//signals an image has been captured
-		chBSemSignal(&image_ready_sem);
+		chBSemSignal(&image_ready_sem);  
     }
 }
 
@@ -58,9 +62,8 @@ static THD_FUNCTION(ProcessImage, arg) {
 		*	To complete
 		*/
 		for(uint16_t i=0; i < 2*IMAGE_BUFFER_SIZE; i=i+2){
-			image[i/2] = ((img_buff_ptr[i] & 0b11111000) >> 2);
+			image[i/2] = ((img_buff_ptr[i] & 0b11111000) >> 3);
 		}
-		SendUint8ToComputer(image,sizeof(image));
 		chThdSleepMilliseconds(10);
 		}
 
