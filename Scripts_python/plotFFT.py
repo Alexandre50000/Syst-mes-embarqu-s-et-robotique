@@ -8,6 +8,7 @@ import struct
 import sys
 import signal
 import time
+import random
 from threading import Thread
 
 #Can be converted into a portable package by using the PyInstaller module
@@ -18,7 +19,7 @@ goodbye = """
           |\      _,,,---,,_
           /,`.-'`'    -.  ;-;;,_
          |,4-  ) )-,_..;\ (  `'-'
- _______'---''(_/--'__`-'\_)______   ______            _______  _
+ _______ '--''(_/--'__`-'\_)______   ______            _______  _
 (  ____ \(  ___  )(  ___  )(  __  \ (  ___ \ |\     /|(  ____ \| |
 | (    \/| (   ) || (   ) || (  \  )| (   ) )( \   / )| (    \/| |
 | |      | |   | || |   | || |   ) || (__/ /  \ (_) / | (__    | |
@@ -53,7 +54,9 @@ f0 = 5      # default sinus frequency
 def handle_close(evt):
     #we stop the serial thread
     reader_thd.stop()
-    print(goodbye)
+    i = random.randint(0,1)
+    bye = [goodbye, goodbye2]
+    print(bye[i])
 
 #update the plots
 def update_plot():

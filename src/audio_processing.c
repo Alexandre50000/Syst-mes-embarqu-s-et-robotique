@@ -35,6 +35,9 @@ static float micBack_output[FFT_SIZE];
 *	uint16_t num_samples	Tells how many data we get in total (should always be 640)
 */
 void processAudioData(int16_t *data, uint16_t num_samples){
+	for(uint16_t i=0; i < num_samples/4 ; ++i) {
+		
+	}
 
 	/*
 	*
