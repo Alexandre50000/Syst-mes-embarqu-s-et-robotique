@@ -57,14 +57,18 @@
 >- Compile the code given and use the python script to connect to the serial port used by the e-puck2 to receive and send the data and try to send signals with different frequencies
 >- You can observe two peaks
 >   - What are they representing ?
+>     - **ANSWER**: They represent the signal in the frequency space and since the fourier transformation of a sinus signal is 2 diracs, we see two peaks at the frequency generated.
 >   - Why the zero of the plot is on the center ?
+>     - **ANSWER**: The fourier transform of a sinus is symetric so the zero is in the middle.
 >- What is the max frequency the FFT done by the robot can find with this signal ?
+> - **ANSWER**: As the maximum sampling is 300Hz, by Shannon it can only detect up to 150 Hz (half of the sampling).
 >- 💡 Hint: the script emulates a sampling frequency of 300Hz
 >- 💡 Hint: In other words, what is the relation between the frequency the FFT can extract and the sampling frequency of the signal ? (See Shannon / Nyquist)
 
 > `Task 2`
 >- With the previous answers, find the relation between the positions of the peaks and the real frequency
 >- For example if two peaks are on the positions -200 and 200, what is their frequency
+> - **ANSWER**: When the peaks are at 200, the frequancy is at 90 Hz and at 400 it is at 33.3 Hz
 >- **Bonus** : The Fourier Transform of a sinus is a Dirac
 >   - Why do you almost never observe a perfect Dirac ?
 >   - 💡 Hint: what is the hypothesis made when calculating the DFT and therefore the FFT ?
@@ -78,13 +82,18 @@
 >- Look at the main function to see how it works, understand how the FFT function is used and how the data are received and sent
 >- What does **\#ifdef**, **\#else** or **\#endif** mean in the code
 >- What is the difference when using them instead of doing a normal **if...else...** condition ?
+> - **ANSWER**: The **\#if** like statements or only read at compile time and not at run time , or when the code is running, the computer does not see these lines.
 >- What is the size of the different buffers used and how are arranged the data inside them ?
+> - **ANSWER**: Buffers are 1024 or 2048 sized array of floats depending if it is an output or input.
 >- Where are they declared ?
+> - **ANSWER**: They are declared in audio_processing.c
 >- What is the goal of the function **arm_cmplx_mag_f32()**
+> - **ANSWER**: This function sends back the norm of the imaginary number.
 
 > `Task 4`
 >- Now look at the file **fft.c**, you will find two different implementations of an FFT: **doFFT_optimized()** and **doFFT_c()**
 >- For both implementations, where are stored the results of the FFT ?
+> - **ANSWER**: They are stored in a buffer, bufferCmplxInput.
 >- 💡 Hint: What does "In-Place" mean ?
 >- Use the non optimized function instead of the optimized one to compute the FFT (comment the use of the optimized one in the main function)
 >- You will need to convert the data in order to have the structure needed by the function **doFFT_c()** because you have to give a **complex_float** structure array as argument and you have an array containing float numbers
@@ -95,8 +104,10 @@
 >- Measure the execution time of the two implementations of the FFT and of the function **arm_cmplx_mag_f32()**
 >- For this, you can use the timer12, like in the TP2
 >- You can find in the listing [Code block 1](#code-block-1) a reminder of how to use a timer to measure time
+>   - **ANSWER**: fft_c takes 27.72 ms and fft_opti takes 666 **micro**seconds.
 >- How many processor cycles represent the times measured ?
 >- Is it worth it to use an optimized FFT function ?
+>   - **ANSWER**: Yes as it is much faster and allows to capture higher frequencies.
 >- **Bonus** : You can take a look at the document **[DSP Concepts](#dsp-concepts)** if you want to understand how it is possible to improve the execution time of a code written in C
 
 >### Code block 1

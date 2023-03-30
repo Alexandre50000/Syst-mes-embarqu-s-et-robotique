@@ -92,10 +92,26 @@ int main(void){
         uint16_t size = ReceiveInt16FromComputer((BaseSequentialStream *) &SD3, bufferCmplxInput, FFT_SIZE);
 
         if(size == FFT_SIZE){
-            doFFT_optimized(FFT_SIZE, bufferCmplxInput);
+            //doFFT_optimized(FFT_SIZE, bufferCmplxInput);
+            volatile uint16_t time = 0;
+
+            chSysLock();
+            //reset the timer counter
+            GPTD12.tim->CNT = 0;
+
+            //-> Functions to measure <-//
+            doFFT_c(FFT_SIZE, bufferCmplxInput);
+            //doFFT_optimized(FFT_SIZE, bufferCmplxInput);
+            //                          //
+            
 
             arm_cmplx_mag_f32(bufferCmplxInput, bufferOutput, FFT_SIZE);
+            
+            time = GPTD12.tim->CNT;
+            chSysUnlock();
 
+            chprintf((BaseSequentialStream *)&SDU1, "time=%dus\n", time);
+            
             SendFloatToComputer((BaseSequentialStream *) &SD3, bufferOutput, FFT_SIZE);
         }
 #endif  /* SEND_FROM_MIC */
