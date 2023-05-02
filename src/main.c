@@ -10,6 +10,8 @@
 #include <audio/microphone.h>
 #include <arm_math.h>
 #include <sensors/VL53L0X/VL53L0X.h>
+#include <sensors/proximity.h>
+
 
 #include "main.h"
 #include "audio_processing.h"
@@ -21,6 +23,13 @@
 
 //uncomment to use double buffering to send the FFT to the computer
 #define DOUBLE_BUFFERING
+
+// declares bus to start bus communication for optical sensors
+messagebus_t bus;
+MUTEX_DECL(bus_lock);
+CONDVAR_DECL(bus_condvar);
+
+parameter_namespace_t parameter_root, aseba_ns;
 
 static void serial_start(void){
 	static SerialConfig ser_cfg = {
@@ -39,6 +48,9 @@ int main(void){
     chSysInit();
     mpu_init();
 
+    /** Inits the Inter Process Communication bus. */
+    messagebus_init(&bus, &bus_lock, &bus_condvar);
+
     //starts the serial communication
     serial_start();
     //starts the USB communication
@@ -50,12 +62,17 @@ int main(void){
     //inits the ToF captor
     VL53L0X_start();
 
+    //inits the proximity sensors
+    proximity_start();
+    calibrate_ir();
+
+
     /* Infinite loop. */
     while (1) {
 
         uint16_t distance;
-        distance = VL53L0X_get_dist_mm();
-        chprintf((BaseSequentialStream *) &SD3, "Distance = %d \n", distance);
+        distance = get_prox(0);
+        chprintf((BaseSequentialStream *) &SD3, "Distance = %d \n \n", distance);
         chThdSleepMilliseconds(20);
         }
 }
