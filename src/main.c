@@ -11,12 +11,16 @@
 #include <arm_math.h>
 #include <sensors/VL53L0X/VL53L0X.h>
 #include <sensors/proximity.h>
+#include <leds.h>
+#include <spi_comm.h>
+#include <sensors/imu.h>
 
 
 #include "main.h"
 #include "audio_processing.h"
 #include "fft.h"
 #include "communications.h"
+#include "pickup.h"
 
 //uncomment to send the FFTs results from the real microphones
 //#define SEND_FROM_MIC
@@ -53,6 +57,10 @@ int main(void){
 
     //starts the serial communication
     serial_start();
+
+    //starts SPI communication for RGB LEDS
+    spi_comm_start();
+
     //starts the USB communication
     usb_start();
 
@@ -66,14 +74,21 @@ int main(void){
     proximity_start();
     calibrate_ir();
 
+    //inits the IMU
+    imu_start();
+    calibrate_acc();
+
+    pickup_init();
+    
+
+
 
     /* Infinite loop. */
     while (1) {
-
-        uint16_t distance;
-        distance = get_prox(0);
-        chprintf((BaseSequentialStream *) &SD3, "Distance = %d \n \n", distance);
-        chThdSleepMilliseconds(20);
+        int16_t acc; 
+        acc = get_acc(0);
+        chprintf((BaseSequentialStream *) &SD3, "X value = %d \n \n", acc);
+        chThdSleepMilliseconds(500);
         }
 }
 
