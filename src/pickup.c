@@ -12,7 +12,7 @@
 
 #define MIN_DISTANCE    100
 #define MIN_SENSORS     4    //Minimum amount of sensors that need to trigger befor panic
-#define HALF_G          4000 //Value of IMU where acc is equaal to around 0.25g        
+#define THRESHOLD          4000 //Value of IMU when acc is equal to around 0.25g        
 
 
 static THD_WORKING_AREA(waPickup, 256);
@@ -61,7 +61,7 @@ int8_t check_pickup(void){
             ++triggers;
         }
     }
-    if((triggers >= MIN_SENSORS) && (acc_x > HALF_G || acc_y > HALF_G)){
+    if((triggers >= MIN_SENSORS) && (acc_x > THRESHOLD || acc_y > THRESHOLD)){
         return 1;
     }
     else{

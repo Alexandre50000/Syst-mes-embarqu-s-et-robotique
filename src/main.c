@@ -47,7 +47,6 @@ static void serial_start(void){
 }
 
 int main(void){
-
     halInit();
     chSysInit();
     mpu_init();
@@ -79,16 +78,15 @@ int main(void){
     calibrate_acc();
 
     pickup_init();
-    
+    listen_init();
 
+    mic_start(&processAudioData);
 
 
     /* Infinite loop. */
     while (1) {
-        int16_t acc; 
-        acc = get_acc(0);
-        chprintf((BaseSequentialStream *) &SD3, "X value = %d \n \n", acc);
-        chThdSleepMilliseconds(500);
+        
+        chThdSleepMilliseconds(20);
         }
 }
 
