@@ -13,6 +13,7 @@
 
 //semaphore
 static BSEMAPHORE_DECL(micDataReady_sem, TRUE);
+static BSEMAPHORE_DECL(micvaluesReady_sem, TRUE);
 
 //2 times FFT_SIZE because these arrays contain complex numbers (real + imaginary)
 static float micLeft_cmplx_input[2 * FFT_SIZE];
@@ -24,6 +25,10 @@ static float micLeft_output[FFT_SIZE];
 static float micRight_output[FFT_SIZE];
 static float micFront_output[FFT_SIZE];
 static float micBack_output[FFT_SIZE];
+
+
+static float value;
+static int16_t hertz;
 
 
 
@@ -45,6 +50,13 @@ static float micBack_output[FFT_SIZE];
 #define FREQ_BACKWARD_L		(FREQ_BACKWARD-1)
 #define FREQ_BACKWARD_H		(FREQ_BACKWARD+1)
 
+
+/*  
+*   Thread that listens for command
+*	It is always active and must transmit
+*	data to main after hearing a sound
+*/
+
 static THD_WORKING_AREA(waListen, 256);
 static THD_FUNCTION(Listen, arg) {
 
@@ -53,9 +65,17 @@ static THD_FUNCTION(Listen, arg) {
 
     while(1){
 		wait_for_data();
-
-		
-       
+		float max_norm = 0;
+		int16_t max_norm_index = -1;
+		for(uint16_t i = MIN_FREQ ; i <= MAX_FREQ ; i++){
+			if(micLeft_output[i] > max_norm){
+				max_norm = micLeft_output[i];
+				max_norm_index = i;
+		}}
+		value = max_norm;
+		hertz = max_norm_index;
+		chprintf((BaseSequentialStream *) &SD3, "Max value = %f \n Max Hertz = %d \n", value, hertz);
+		chThdSleepMilliseconds(20);
     }
 }
 
@@ -96,7 +116,6 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 	*/
 
 	static uint16_t nb_samples = 0;
-	static uint8_t mustSend = 0;
 
 	//loop to fill the buffers
 	for(uint16_t i = 0 ; i < num_samples ; i+=4){
@@ -153,6 +172,22 @@ void processAudioData(int16_t *data, uint16_t num_samples){
 
 void wait_for_data(void){
 	chBSemWait(&micDataReady_sem);
+}
+
+void wait_for_values(void){
+	chBSemWait(&micvaluesReady_sem);
+}
+
+void listen_init(void){
+	chThdCreateStatic(waListen, sizeof(waListen), NORMALPRIO, Listen, NULL);
+}
+
+int16_t get_hertz(void){
+	return hertz;
+}
+
+float get_value(void){
+	return value;
 }
 
 float* get_audio_buffer_ptr(BUFFER_NAME_t name){
