@@ -32,14 +32,15 @@ static int16_t hertz;
 
 
 
-#define MIN_VALUE_THRESHOLD	10000 
+#define MIN_VALUE_THRESHOLD	4000 
 
-#define MIN_FREQ		10	//we don't analyze before this index to not use resources for nothing
+#define MIN_FREQ		0	//we don't analyze before this index to not use resources for nothing
 #define SOUND_1			16	//250Hz For base recognition
 #define SOUND_2			19	//296Hz Patrol Attack
 #define SOUND_3			23	//359HZ Patrol Defense
 #define SOUND_4			26	//406Hz Controlled Patrol
-#define MAX_FREQ		30	//we don't analyze after this index to not use resources for nothing
+#define NOSOUND         0   // When no new command was perceived
+#define MAX_FREQ		10	//we don't analyze after this index to not use resources for nothing
 
 #define FREQ_FORWARD_L		(FREQ_FORWARD-1)
 #define FREQ_FORWARD_H		(FREQ_FORWARD+1)
@@ -49,6 +50,7 @@ static int16_t hertz;
 #define FREQ_RIGHT_H		(FREQ_RIGHT+1)
 #define FREQ_BACKWARD_L		(FREQ_BACKWARD-1)
 #define FREQ_BACKWARD_H		(FREQ_BACKWARD+1)
+#define NORM				(16000/1024)
 
 
 /*  
@@ -65,22 +67,13 @@ static THD_FUNCTION(Listen, arg) {
 
     while(1){
 		wait_for_data();
-		float max_norm = 0;
-		int16_t max_norm_index = -1;
-		for(uint16_t i = MIN_FREQ ; i <= MAX_FREQ ; i++){
-			if(micLeft_output[i] > max_norm){
-				max_norm = micLeft_output[i];
-				max_norm_index = i;
-		}}
-		value = max_norm;
-		hertz = max_norm_index;
-		chprintf((BaseSequentialStream *) &SD3, "Max value = %f \n Max Hertz = %d \n", value, hertz);
+		chprintf((BaseSequentialStream *) &SD3, "Max Herts = %4.2f \n", (float)get_command(micFront_output)*NORM);
 		chThdSleepMilliseconds(20);
     }
 }
 
 /*
-*	Simple function used to detect the highest value in a buffer
+*	Function used to detect the highest value in a buffer
 *	and to execute a motor command depending on it
 */
 void sound_remote(float* data){
@@ -93,6 +86,27 @@ void sound_remote(float* data){
 			max_norm = data[i];
 			max_norm_index = i;
 		}
+	}
+}
+
+int8_t get_command(float* mic){
+
+	int8_t freq;
+	uint16_t norm_value;
+	freq = -1;
+	norm_value = MIN_VALUE_THRESHOLD;
+
+	for(uint16_t i = MIN_FREQ ; i <= MAX_FREQ ; i++){
+		if(mic[i] > norm_value){
+			norm_value = mic[i];
+			freq= i;
+		}
+	}
+	if(freq == -1){
+		return NOSOUND;
+	}
+	else{
+		return freq;
 	}
 }
 

@@ -27,6 +27,7 @@ void wait_for_data(void);
 void wait_for_values(void);
 float get_value(void);
 int16_t get_hertz(void);
+int8_t get_command(float* mic);
 
 void listen_init(void);
 

@@ -22,11 +22,6 @@
 #include "communications.h"
 #include "pickup.h"
 
-//uncomment to send the FFTs results from the real microphones
-//#define SEND_FROM_MIC
-
-//uncomment to use double buffering to send the FFT to the computer
-#define DOUBLE_BUFFERING
 
 // declares bus to start bus communication for optical sensors
 messagebus_t bus;
@@ -97,3 +92,4 @@ uintptr_t __stack_chk_guard = STACK_CHK_GUARD;
 void __stack_chk_fail(void){
     chSysHalt("Stack smashing detected");
 }
+ 
