@@ -2,7 +2,14 @@
 #include <hal.h>
 #include <motors.h>
 
-#define VITESSE_ROTATION_SURVEILLANCE   2
+#include "image_processing.h"
+
+#define VITESSE_ROTATION_SURVEILLANCE   0.8
+#define VITESSE_ROTATION_ATTAQUE_INTERIEUR  3.4
+#define VITESSE_ROTATION_ATTAQUE_EXTERIEUR  3.8
+
+//semaphore
+static BSEMAPHORE_DECL(detection_sem, FALSE);
 
 // Mode surveillance
 static THD_WORKING_AREA(waSurveillance, 256);
@@ -12,9 +19,11 @@ static THD_FUNCTION(Surveillance, arg) {
     (void)arg;
 
     while(1){
+        // tant qu'une detection n'est pas faite
+        chBSemWait(&detection_sem);
+        // surveillance
         rotation_surveillance();
     }
-
 }
 
 void surveillance_init(void){
@@ -33,23 +42,23 @@ void rotation_quart_droite(){
 
 void    rotation_surveillance(){
     rotation_quart_gauche();
-    // SLEEP T=1/4 de tour
+    chThdSleepS(4); // temps pour faire 1/4 de tour
     reset_motors();
     chThdSleepS(1); // PAUSE 1s
     rotation_quart_droite();
-    // SLEEP T=1/4 de tour
+    chThdSleepS(4); // temps pour faire 1/4 de tour
     reset_motors();
     chThdSleepS(1); // PAUSE 1s
     rotation_quart_gauche();
-    // SLEEP T=1/4 de tour
+    chThdSleepS(4); // temps pour faire 1/4 de tour
     reset_motors();
     chThdSleepS(1); // PAUSE 1s
     rotation_quart_droite();
-    // SLEEP T=1/4 de tour
+    chThdSleepS(4); // temps pour faire 1/4 de tour
     reset_motors();
     chThdSleepS(1); // PAUSE 1s
     rotation_quart_gauche();
-    // SLEEP T=1/4 de tour
+    chThdSleepS(4); // temps pour faire 1/4 de tour
     reset_motors();
     chThdSleepS(1); // PAUSE 1s
 } 
@@ -59,7 +68,7 @@ void reset_motors(){
     right_motor_set_speed(0);
 }
 
-// Attaque après détection
+// detection
 static THD_WORKING_AREA(waAttaque, 256);
 static THD_FUNCTION(Attaque, arg) {
 
@@ -67,7 +76,12 @@ static THD_FUNCTION(Attaque, arg) {
     (void)arg;
 
     while(1){
-        attaque();
+        if (detection()){
+            //signale qu'une détection a été faite
+		    chBSemSignal(&detection_sem);
+            attaque();
+            // retour à la base grâce au son
+        }
     }
 }
 
@@ -77,4 +91,21 @@ void attaque_init(void){
 
 void attaque(){
     // 3 slash en avancant
+    left_motor_set_speed(VITESSE_ROTATION_ATTAQUE_INTERIEUR);
+    right_motor_set_speed(VITESSE_ROTATION_ATTAQUE_EXTERIEUR);
+    // pause d'un certain temps
+    left_motor_set_speed(VITESSE_ROTATION_ATTAQUE_EXTERIEUR);
+    right_motor_set_speed(VITESSE_ROTATION_ATTAQUE_INTERIEUR);
+    // pause d'un certain temps
+    left_motor_set_speed(VITESSE_ROTATION_ATTAQUE_INTERIEUR);
+    right_motor_set_speed(VITESSE_ROTATION_ATTAQUE_EXTERIEUR);
+}
+
+bool detection(){
+    if (get_distance_cm()<10){
+        return true;
+    }
+    else {
+        return false;
+    }
 }
