@@ -3,6 +3,7 @@
 #include <motors.h>
 
 #include "image_processing.h"
+#include "audio_processing.h"
 
 #define VITESSE_ROTATION_SURVEILLANCE   0.8
 #define VITESSE_ROTATION_ATTAQUE_INTERIEUR  3.4
@@ -21,6 +22,10 @@ static THD_FUNCTION(Surveillance, arg) {
     while(1){
         // tant qu'une detection n'est pas faite
         chBSemWait(&detection_sem);
+        // Si son4 go control mode
+        if (get_value()==SOUND_4){
+            // MODE CONTROL;
+        }
         // surveillance
         rotation_surveillance();
     }
@@ -40,7 +45,7 @@ void rotation_quart_droite(){
     right_motor_set_speed(-VITESSE_ROTATION_SURVEILLANCE);
 }
 
-void    rotation_surveillance(){
+void rotation_surveillance(){
     rotation_quart_gauche();
     chThdSleepS(4); // temps pour faire 1/4 de tour
     reset_motors();
@@ -85,7 +90,7 @@ static THD_FUNCTION(Attaque, arg) {
     }
 }
 
-void attaque_init(void){
+void attaque_init(){
     chThdCreateStatic(waAttaque, sizeof(waAttaque), NORMALPRIO, Attaque, NULL);
 }
 

@@ -7,4 +7,7 @@
     // MacOS: use the command "ls /dev/cu.*" and use the lowest one
     //      -> "com_port": "/dev/cu.usbmodemEPUCKx"
     "com_port": "\\\\.\\COM8",
+    "files.associations": {
+        "audio_processing.h": "c"
+    },
 }

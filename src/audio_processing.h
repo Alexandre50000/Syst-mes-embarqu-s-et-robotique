@@ -4,6 +4,11 @@
 
 #define FFT_SIZE 	1024
 
+#define SOUND_1			16	//250Hz For base recognition
+#define SOUND_2			19	//296Hz Patrol Attack
+#define SOUND_3			23	//359HZ Patrol Defense
+#define SOUND_4			26	//406Hz Controlled Patrol
+
 typedef enum {
 	//2 times FFT_SIZE because these arrays contain complex numbers (real + imaginary)
 	LEFT_CMPLX_INPUT = 0,

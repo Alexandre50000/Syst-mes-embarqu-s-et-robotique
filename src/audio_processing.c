@@ -30,15 +30,9 @@ static float micBack_output[FFT_SIZE];
 static float value;
 static int16_t hertz;
 
-
-
-#define MIN_VALUE_THRESHOLD	10000 
+#define MIN_VALUE_THRESHOLD	10000
 
 #define MIN_FREQ		10	//we don't analyze before this index to not use resources for nothing
-#define SOUND_1			16	//250Hz For base recognition
-#define SOUND_2			19	//296Hz Patrol Attack
-#define SOUND_3			23	//359HZ Patrol Defense
-#define SOUND_4			26	//406Hz Controlled Patrol
 #define MAX_FREQ		30	//we don't analyze after this index to not use resources for nothing
 
 #define FREQ_FORWARD_L		(FREQ_FORWARD-1)
@@ -49,7 +43,6 @@ static int16_t hertz;
 #define FREQ_RIGHT_H		(FREQ_RIGHT+1)
 #define FREQ_BACKWARD_L		(FREQ_BACKWARD-1)
 #define FREQ_BACKWARD_H		(FREQ_BACKWARD+1)
-
 
 /*  
 *   Thread that listens for command
