@@ -72,16 +72,20 @@ int main(void){
     imu_start();
     calibrate_acc();
 
+    mic_start(&processAudioData);
+
+    
     pickup_init();
     listen_init();
 
-    mic_start(&processAudioData);
-
-
     /* Infinite loop. */
     while (1) {
+
+        uint16_t com = get_command();
         
-        chThdSleepMilliseconds(20);
+        chprintf((BaseSequentialStream *) &SD3, "Hertz = %.2f \n", (float)com*(16000/1024));
+
+        chThdSleepMilliseconds(50);
         }
 }
 
@@ -92,4 +96,6 @@ uintptr_t __stack_chk_guard = STACK_CHK_GUARD;
 void __stack_chk_fail(void){
     chSysHalt("Stack smashing detected");
 }
+
+
  

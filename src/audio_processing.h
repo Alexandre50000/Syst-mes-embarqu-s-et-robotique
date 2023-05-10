@@ -24,10 +24,12 @@ void processAudioData(int16_t *data, uint16_t num_samples);
 *	put the invoking thread into sleep until it can process the audio datas
 */
 void wait_for_data(void);
-void wait_for_values(void);
+
+
+
 float get_value(void);
-int16_t get_hertz(void);
-int8_t get_command(float* mic);
+int16_t get_command(void);
+void compute_command(void);
 
 void listen_init(void);
 

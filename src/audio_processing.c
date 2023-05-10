@@ -13,7 +13,7 @@
 
 //semaphore
 static BSEMAPHORE_DECL(micDataReady_sem, TRUE);
-static BSEMAPHORE_DECL(micvaluesReady_sem, TRUE);
+static BSEMAPHORE_DECL(commandReady, TRUE);
 
 //2 times FFT_SIZE because these arrays contain complex numbers (real + imaginary)
 static float micLeft_cmplx_input[2 * FFT_SIZE];
@@ -26,31 +26,29 @@ static float micRight_output[FFT_SIZE];
 static float micFront_output[FFT_SIZE];
 static float micBack_output[FFT_SIZE];
 
-
-static float value;
+// Static variables containing the frequency of command
 static int16_t hertz;
 
 
+#define MIN_VALUE_THRESHOLD	6000 
 
-#define MIN_VALUE_THRESHOLD	4000 
-
-#define MIN_FREQ		0	//we don't analyze before this index to not use resources for nothing
-#define SOUND_1			16	//250Hz For base recognition
-#define SOUND_2			19	//296Hz Patrol Attack
-#define SOUND_3			23	//359HZ Patrol Defense
-#define SOUND_4			26	//406Hz Controlled Patrol
+#define MIN_FREQ		30	//we don't analyze before this index to not use resources for nothing
+#define SOUND_1			32	//500Hz For base recognition
+#define SOUND_2			36	//Around 560Hz Patrol Attack
+#define SOUND_3			39	//Around 610HZ Patrol Defense
+#define SOUND_4			42	//Around 650Hz Controlled Patrol
 #define NOSOUND         0   // When no new command was perceived
-#define MAX_FREQ		10	//we don't analyze after this index to not use resources for nothing
+#define MAX_FREQ		45	//we don't analyze after this index to not use resources for nothing
 
-#define FREQ_FORWARD_L		(FREQ_FORWARD-1)
-#define FREQ_FORWARD_H		(FREQ_FORWARD+1)
-#define FREQ_LEFT_L			(FREQ_LEFT-1)
-#define FREQ_LEFT_H			(FREQ_LEFT+1)
-#define FREQ_RIGHT_L		(FREQ_RIGHT-1)
-#define FREQ_RIGHT_H		(FREQ_RIGHT+1)
-#define FREQ_BACKWARD_L		(FREQ_BACKWARD-1)
-#define FREQ_BACKWARD_H		(FREQ_BACKWARD+1)
-#define NORM				(16000/1024)
+#define SOUND_1_L		(SOUND_1-1)
+#define SOUND_1_H		(SOUND_1+1)
+#define SOUND_2_L		(SOUND_2-1)
+#define SOUND_2_H		(SOUND_2+1)
+#define SOUND_3_L		(SOUND_3-1)
+#define SOUND_3_H		(SOUND_3+1)
+#define SOUND_4_L		(SOUND_4-1)
+#define SOUND_4_H		(SOUND_4+1)
+#define NORM			(16000/1024)
 
 
 /*  
@@ -67,47 +65,51 @@ static THD_FUNCTION(Listen, arg) {
 
     while(1){
 		wait_for_data();
-		chprintf((BaseSequentialStream *) &SD3, "Max Herts = %4.2f \n", (float)get_command(micFront_output)*NORM);
-		chThdSleepMilliseconds(20);
+		compute_command();
+		chThdSleepMilliseconds(50);
     }
 }
 
-/*
-*	Function used to detect the highest value in a buffer
-*	and to execute a motor command depending on it
-*/
-void sound_remote(float* data){
-	float max_norm = MIN_VALUE_THRESHOLD;
-	int16_t max_norm_index = -1; 
 
-	//search for the highest peak
-	for(uint16_t i = MIN_FREQ ; i <= MAX_FREQ ; i++){
-		if(data[i] > max_norm){
-			max_norm = data[i];
-			max_norm_index = i;
-		}
-	}
-}
-
-int8_t get_command(float* mic){
+void compute_command(void){
 
 	int8_t freq;
-	uint16_t norm_value;
+	uint16_t max_norm;
 	freq = -1;
-	norm_value = MIN_VALUE_THRESHOLD;
+	max_norm = MIN_VALUE_THRESHOLD;
 
 	for(uint16_t i = MIN_FREQ ; i <= MAX_FREQ ; i++){
-		if(mic[i] > norm_value){
-			norm_value = mic[i];
-			freq= i;
+		uint16_t average = 0;
+		average += micFront_output[i];
+		average += micBack_output[i];
+		average += micLeft_output[i];
+		average += micRight_output[i];
+		average /= 4;
+		if(average > max_norm){
+			max_norm = average;
+			freq = i;
 		}
 	}
-	if(freq == -1){
-		return NOSOUND;
+
+	if(freq >= SOUND_1_L && freq<= SOUND_1_H){
+		hertz = SOUND_1;
+	}
+	
+	else if(freq >= SOUND_2_L && freq <= SOUND_2_H){
+		hertz = SOUND_2;
+	}
+	else if(freq >= SOUND_3_L && freq <= SOUND_3_H){
+		hertz = SOUND_3;
+	}
+	else if(freq >= SOUND_4_L && freq <= SOUND_4_H){
+		hertz = SOUND_4;
 	}
 	else{
-		return freq;
+		hertz = NOSOUND;
 	}
+
+	chBSemSignal(&commandReady);
+	
 }
 
 /*
@@ -188,21 +190,16 @@ void wait_for_data(void){
 	chBSemWait(&micDataReady_sem);
 }
 
-void wait_for_values(void){
-	chBSemWait(&micvaluesReady_sem);
-}
 
 void listen_init(void){
 	chThdCreateStatic(waListen, sizeof(waListen), NORMALPRIO, Listen, NULL);
 }
 
-int16_t get_hertz(void){
+int16_t get_command(void){
+	chBSemWait(&commandReady);
 	return hertz;
 }
 
-float get_value(void){
-	return value;
-}
 
 float* get_audio_buffer_ptr(BUFFER_NAME_t name){
 	if(name == LEFT_CMPLX_INPUT){
@@ -233,3 +230,4 @@ float* get_audio_buffer_ptr(BUFFER_NAME_t name){
 		return NULL;
 	}
 }
+
