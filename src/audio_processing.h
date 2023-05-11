@@ -4,6 +4,20 @@
 
 #define FFT_SIZE 	1024
 
+#define MIN_VALUE_THRESHOLD	10000
+
+#define MIN_FREQ		30	//we don't analyze before this index to not use resources for nothing
+#define MAX_FREQ		45	//we don't analyze after this index to not use resources for nothing
+
+#define SOUND_1_L		(SOUND_1-1)
+#define SOUND_1_H		(SOUND_1+1)
+#define SOUND_2_L		(SOUND_2-1)
+#define SOUND_2_H		(SOUND_2+1)
+#define SOUND_3_L		(SOUND_3-1)
+#define SOUND_3_H		(SOUND_3+1)
+#define SOUND_4_L		(SOUND_4-1)
+#define SOUND_4_H		(SOUND_4+1)
+
 typedef enum {
 	//2 times FFT_SIZE because these arrays contain complex numbers (real + imaginary)
 	LEFT_CMPLX_INPUT = 0,

@@ -80,11 +80,6 @@ int main(void){
 
     /* Infinite loop. */
     while (1) {
-
-        uint16_t com = get_command();
-        if (com != 0){
-        chprintf((BaseSequentialStream *) &SD3, " Hertz = %.2f \n Max Right = %d \n Max Left = %d \n", (float)com*(16000/1024), get_r(), get_l());
-        }
         chThdSleepMilliseconds(50);
         }
 }

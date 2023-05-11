@@ -31,31 +31,10 @@ static int16_t hertz = 0;
 static int16_t max_l;
 static int16_t max_r;
 
-#define MIN_VALUE_THRESHOLD	10000 
-
-#define MIN_FREQ		30	//we don't analyze before this index to not use resources for nothing
-#define SOUND_1			32	//500Hz For base recognition
-#define SOUND_2			36	//Around 560Hz Patrol Attack
-#define SOUND_3			39	//Around 610HZ Patrol Defense
-#define SOUND_4			42	//Around 650Hz Controlled Patrol
-#define NOSOUND         0   // When no new command was perceived
-#define MAX_FREQ		45	//we don't analyze after this index to not use resources for nothing
-
-#define SOUND_1_L		(SOUND_1-1)
-#define SOUND_1_H		(SOUND_1+1)
-#define SOUND_2_L		(SOUND_2-1)
-#define SOUND_2_H		(SOUND_2+1)
-#define SOUND_3_L		(SOUND_3-1)
-#define SOUND_3_H		(SOUND_3+1)
-#define SOUND_4_L		(SOUND_4-1)
-#define SOUND_4_H		(SOUND_4+1)
-#define NORM			(16000/1024)
-
-
 /*  
 *   Thread that listens for command
-*	It is always active and must transmit
-*	data to main after hearing a sound
+*	It is always active and must update hertz
+*   variable after hearing a sound
 */
 
 static THD_WORKING_AREA(waListen, 256);
@@ -71,6 +50,9 @@ static THD_FUNCTION(Listen, arg) {
     }
 }
 
+/**
+ * @brief   Performs average of microphone ffts and finds command
+ */
 
 void compute_command(void){
 
@@ -80,7 +62,7 @@ void compute_command(void){
 	last_hertz = hertz;
 	freq = -1;
 	max_norm = MIN_VALUE_THRESHOLD;
-
+	// Averages from 4 microhpones to improve accuracy
 	for(uint16_t i = MIN_FREQ ; i <= MAX_FREQ ; i++){
 		uint16_t average = 0;
 		average += micFront_output[i];
@@ -204,18 +186,16 @@ void listen_init(void){
 	chThdCreateStatic(waListen, sizeof(waListen), NORMALPRIO, Listen, NULL);
 }
 
+/**
+*	@brief Returns command when ready
+*	@return One of the heard commands
+*
+*/
+
 int16_t get_command(void){
 	chBSemWait(&commandReady);
 	return hertz;
 }
-
-int16_t get_r(void){
-	return max_r;	
-}
-int16_t get_l(void){
-	return max_l;	
-}
-
 
 float* get_audio_buffer_ptr(BUFFER_NAME_t name){
 	if(name == LEFT_CMPLX_INPUT){
