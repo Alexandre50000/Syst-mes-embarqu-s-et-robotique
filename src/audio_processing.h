@@ -32,7 +32,8 @@ int16_t get_command(void);
 void compute_command(void);
 
 void listen_init(void);
-
+int16_t get_r(void);
+int16_t get_l(void);
 /*
 *	Returns the pointer to the BUFFER_NAME_t buffer asked
 */

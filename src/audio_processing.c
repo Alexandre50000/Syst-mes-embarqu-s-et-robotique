@@ -27,10 +27,11 @@ static float micFront_output[FFT_SIZE];
 static float micBack_output[FFT_SIZE];
 
 // Static variables containing the frequency of command
-static int16_t hertz;
+static int16_t hertz = 0;
+static int16_t max_l;
+static int16_t max_r;
 
-
-#define MIN_VALUE_THRESHOLD	6000 
+#define MIN_VALUE_THRESHOLD	10000 
 
 #define MIN_FREQ		30	//we don't analyze before this index to not use resources for nothing
 #define SOUND_1			32	//500Hz For base recognition
@@ -73,8 +74,10 @@ static THD_FUNCTION(Listen, arg) {
 
 void compute_command(void){
 
+	uint16_t last_hertz;
 	int8_t freq;
 	uint16_t max_norm;
+	last_hertz = hertz;
 	freq = -1;
 	max_norm = MIN_VALUE_THRESHOLD;
 
@@ -88,10 +91,13 @@ void compute_command(void){
 		if(average > max_norm){
 			max_norm = average;
 			freq = i;
+			max_l = micLeft_output[i];
+			max_r = micRight_output[i];
+			
 		}
 	}
 
-	if(freq >= SOUND_1_L && freq<= SOUND_1_H){
+	if(freq >= SOUND_1_L && freq <= SOUND_1_H){
 		hertz = SOUND_1;
 	}
 	
@@ -108,7 +114,10 @@ void compute_command(void){
 		hertz = NOSOUND;
 	}
 
-	chBSemSignal(&commandReady);
+	// gives a debounce to make sure it's the right command to removenois
+	if(hertz == last_hertz){
+		chBSemSignal(&commandReady);
+	}
 	
 }
 
@@ -198,6 +207,13 @@ void listen_init(void){
 int16_t get_command(void){
 	chBSemWait(&commandReady);
 	return hertz;
+}
+
+int16_t get_r(void){
+	return max_r;	
+}
+int16_t get_l(void){
+	return max_l;	
 }
 
 
