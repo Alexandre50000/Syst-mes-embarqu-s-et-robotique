@@ -9,7 +9,7 @@
 #include "surveillance.h"
 
 #define VITESSE_ROTATION_SURVEILLANCE       321   // Un demi tour par 2 secondes
-#define VITESSE_ROTATION_ATTAQUE_INTERIEUR  950
+#define VITESSE_ROTATION_ATTAQUE_INTERIEUR  1100
 #define VITESSE_ROTATION_ATTAQUE_EXTERIEUR  1100
 
 // SStatic variable
@@ -50,7 +50,7 @@ void rotation_quart_gauche(void){
     }
     uint8_t counter = 0; // Jusqu'à 36 pour faire un demi tour
 
-    while(counter < 36 && !detected){
+    while(counter < 37 && !detected){
         chThdSleepMilliseconds(56);
         chBSemSignal(&Rotation_finished_sem);
         ++counter;
@@ -67,7 +67,7 @@ void rotation_quart_droite(void){
     }
     uint8_t counter = 0; // Jusqu'à 36 pour faire un demi tour
 
-    while(counter < 36 && !detected){
+    while(counter < 37 && !detected){
         chThdSleepMilliseconds(56);
         chBSemSignal(&Rotation_finished_sem);
         ++counter;
