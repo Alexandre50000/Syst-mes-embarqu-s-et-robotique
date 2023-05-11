@@ -15,6 +15,9 @@ extern messagebus_t bus;
 
 extern parameter_namespace_t parameter_root;
 
+/**Mailbox for commands*/
+extern messagebus_topic_t Command_topic;
+    
 #ifdef __cplusplus
 }
 #endif
