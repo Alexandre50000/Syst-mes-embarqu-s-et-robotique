@@ -2,12 +2,16 @@
 #include <stdlib.h>
 #include <ch.h>
 #include <hal.h>
+#include <motors.h>
+
 
 #include "vadrouille.h"
+#include "main.h"
+
 
 // Définition des constantes
 #define MAX_SPEED   1000 // [step/s]
-#define TURN_TIME 1000 // Durée de rotation en millisecondes
+#define TURN_TIME   1000 // Durée de rotation en millisecondes
 
 // Fonction de déplacement aléatoire
 void randomMove(void) {
@@ -18,7 +22,7 @@ void randomMove(void) {
     rightSpeed = rand() % (2 * MAX_SPEED) - MAX_SPEED;
 
     // Appliquer les vitesses aux moteurs de mouvement
-    light_motor_set_speed(leftSpeed);
+    left_motor_set_speed(leftSpeed);
     right_motor_set_speed(rightSpeed);
 
     // Attendre une durée aléatoire pour la rotation
@@ -26,12 +30,8 @@ void randomMove(void) {
     chThdSleepMilliseconds(turnTime);
 
     // Arrêter les moteurs après la rotation
-    light_motor_set_speed(0);
+    left_motor_set_speed(0);
     right_motor_set_speed(0);
-}
-
-void vadrouille_init(void){
-    chThdCreateStatic(waVadrouille, sizeof(waVadrouille), NORMALPRIO, Vadrouille, NULL);
 }
 
 static THD_WORKING_AREA(waVadrouille, 256);
@@ -41,7 +41,7 @@ static THD_FUNCTION(Vadrouille, arg) {
     (void)arg;
 
     // Initialiser le générateur de nombres aléatoires
-    srand(time(NULL));
+    srand(chVTGetSystemTime());
 
     while(1){
         // Appeler la fonction de déplacement aléatoire
@@ -52,4 +52,9 @@ static THD_FUNCTION(Vadrouille, arg) {
     }
 
 
+}
+
+
+void vadrouille_init(void){
+    chThdCreateStatic(waVadrouille, sizeof(waVadrouille), NORMALPRIO, Vadrouille, NULL);
 }

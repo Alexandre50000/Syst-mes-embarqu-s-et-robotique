@@ -14,6 +14,7 @@ CSRC += ./main.c \
 		./communications.c \
 		./fft.c \
 		./pickup.c \
+		./vadrouille.c \
 
 #Header folders to include
 INCDIR += 
