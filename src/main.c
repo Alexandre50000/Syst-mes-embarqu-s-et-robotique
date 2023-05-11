@@ -21,6 +21,7 @@
 #include "fft.h"
 #include "communications.h"
 #include "pickup.h"
+#include "surveillance.h"
 
 //uncomment to send the FFTs results from the real microphones
 //#define SEND_FROM_MIC
@@ -77,16 +78,17 @@ int main(void){
     imu_start();
     calibrate_acc();
 
-    pickup_init();
-    listen_init();
+    //pickup_init();
 
     mic_start(&processAudioData);
+
+    detection_init();
 
 
     /* Infinite loop. */
     while (1) {
         
-        chThdSleepMilliseconds(20);
+        chThdSleepMilliseconds(100);
         }
 }
 

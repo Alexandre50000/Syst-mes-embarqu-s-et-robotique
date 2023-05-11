@@ -1,8 +1,11 @@
-void surveillance_init();
-void rotation_quart_gauche();
-void rotation_quart_droite();
-void rotation_surveillance();
-void reset_motors();
-void attaque_init();
-void attaque();
-bool detection();
+#ifndef SURVEILLANCE_H
+#define SURVEILLANCE_H
+
+void rotation_quart_gauche(void);
+void rotation_quart_droite(void);
+void rotation_surveillance(void);
+void reset_motors(void);
+void detection_init(void);
+void attaque(void);
+int8_t detection(void);
+#endif

@@ -1,16 +1,23 @@
 #include <ch.h>
 #include <hal.h>
 #include <motors.h>
+#include <sensors/VL53L0X/VL53L0X.h>
 
+#include "main.h"
 #include "image_processing.h"
 #include "audio_processing.h"
+#include "surveillance.h"
 
-#define VITESSE_ROTATION_SURVEILLANCE   0.8
-#define VITESSE_ROTATION_ATTAQUE_INTERIEUR  3.4
-#define VITESSE_ROTATION_ATTAQUE_EXTERIEUR  3.8
+#define VITESSE_ROTATION_SURVEILLANCE       321   // Un demi tour par 2 secondes
+#define VITESSE_ROTATION_ATTAQUE_INTERIEUR  950
+#define VITESSE_ROTATION_ATTAQUE_EXTERIEUR  1100
+
+// SStatic variable
+static uint8_t detected = 0;
 
 //semaphore
-static BSEMAPHORE_DECL(detection_sem, FALSE);
+static BSEMAPHORE_DECL(detection_finished_sem, FALSE);
+static BSEMAPHORE_DECL(Rotation_finished_sem, TRUE);
 
 // Mode surveillance
 static THD_WORKING_AREA(waSurveillance, 256);
@@ -20,97 +27,129 @@ static THD_FUNCTION(Surveillance, arg) {
     (void)arg;
 
     while(1){
-        // tant qu'une detection n'est pas faite
-        chBSemWait(&detection_sem);
         // Si son4 go control mode
-        if (get_value()==SOUND_4){
-            // MODE CONTROL;
-        }
+        //if (get_value()==SOUND_4){
+            //MODE CONTROL;
+        //}
         // surveillance
         rotation_surveillance();
+        
     }
 }
 
-void surveillance_init(void){
-    chThdCreateStatic(waSurveillance, sizeof(waSurveillance), NORMALPRIO, Surveillance, NULL);
+
+
+void rotation_quart_gauche(void){
+    if(detected){
+        chBSemSignal(&Rotation_finished_sem);
+        chBSemWait(&detection_finished_sem);
+    }
+    else{
+        left_motor_set_speed(-VITESSE_ROTATION_SURVEILLANCE);
+        right_motor_set_speed(VITESSE_ROTATION_SURVEILLANCE);
+    }
+    uint8_t counter = 0; // Jusqu'à 36 pour faire un demi tour
+
+    while(counter < 36 && !detected){
+        chThdSleepMilliseconds(56);
+        chBSemSignal(&Rotation_finished_sem);
+        ++counter;
+    }
+}
+void rotation_quart_droite(void){
+    if(detected){
+        chBSemSignal(&Rotation_finished_sem);
+        chBSemWait(&detection_finished_sem);
+    }
+    else{
+        left_motor_set_speed(VITESSE_ROTATION_SURVEILLANCE);
+        right_motor_set_speed(-VITESSE_ROTATION_SURVEILLANCE);
+    }
+    uint8_t counter = 0; // Jusqu'à 36 pour faire un demi tour
+
+    while(counter < 36 && !detected){
+        chThdSleepMilliseconds(56);
+        chBSemSignal(&Rotation_finished_sem);
+        ++counter;
+    }
 }
 
-void rotation_quart_gauche(){
-    left_motor_set_speed(-VITESSE_ROTATION_SURVEILLANCE);
-    right_motor_set_speed(VITESSE_ROTATION_SURVEILLANCE);
-}
-
-void rotation_quart_droite(){
-    left_motor_set_speed(VITESSE_ROTATION_SURVEILLANCE);
-    right_motor_set_speed(-VITESSE_ROTATION_SURVEILLANCE);
-}
-
-void rotation_surveillance(){
+void rotation_surveillance(void){
     rotation_quart_gauche();
-    chThdSleepS(4); // temps pour faire 1/4 de tour
     reset_motors();
-    chThdSleepS(1); // PAUSE 1s
+    chThdSleepSeconds(1); // PAUSE 1s
     rotation_quart_droite();
-    chThdSleepS(4); // temps pour faire 1/4 de tour
     reset_motors();
-    chThdSleepS(1); // PAUSE 1s
+    chThdSleepSeconds(1); // PAUSE 1s
     rotation_quart_gauche();
-    chThdSleepS(4); // temps pour faire 1/4 de tour
     reset_motors();
-    chThdSleepS(1); // PAUSE 1s
-    rotation_quart_droite();
-    chThdSleepS(4); // temps pour faire 1/4 de tour
-    reset_motors();
-    chThdSleepS(1); // PAUSE 1s
-    rotation_quart_gauche();
-    chThdSleepS(4); // temps pour faire 1/4 de tour
-    reset_motors();
-    chThdSleepS(1); // PAUSE 1s
+    chThdSleepSeconds(1); // PAUSE
 } 
 
-void reset_motors(){
+void reset_motors(void){
+    if(detected){
+        chBSemSignal(&Rotation_finished_sem);
+        chBSemWait(&detection_finished_sem);
+    }
     left_motor_set_speed(0);
     right_motor_set_speed(0);
 }
 
 // detection
-static THD_WORKING_AREA(waAttaque, 256);
-static THD_FUNCTION(Attaque, arg) {
+static THD_WORKING_AREA(waDetection, 256);
+static THD_FUNCTION(Detection, arg) {
 
     chRegSetThreadName(__FUNCTION__);
     (void)arg;
 
+    
+
     while(1){
-        if (detection()){
-            //signale qu'une détection a été faite
-		    chBSemSignal(&detection_sem);
+        detected = detection();
+        if (detected){
+            // Attends la fin d'une rotation
+            chBSemWait(&Rotation_finished_sem);
             attaque();
-            // retour à la base grâce au son
+            // detection passe à false
+            detected = 0;
+            chBSemSignal(&detection_finished_sem);
+
         }
+        chThdSleepMilliseconds(20);
     }
 }
 
-void attaque_init(){
-    chThdCreateStatic(waAttaque, sizeof(waAttaque), NORMALPRIO, Attaque, NULL);
+void detection_init(void){
+    chThdCreateStatic(waDetection, sizeof(waDetection), NORMALPRIO, Detection, NULL);
+    chThdCreateStatic(waSurveillance, sizeof(waSurveillance), NORMALPRIO, Surveillance, NULL);
 }
 
-void attaque(){
+void attaque(void){
     // 3 slash en avancant
     left_motor_set_speed(VITESSE_ROTATION_ATTAQUE_INTERIEUR);
     right_motor_set_speed(VITESSE_ROTATION_ATTAQUE_EXTERIEUR);
-    // pause d'un certain temps
+    chThdSleepMilliseconds(500);
+    left_motor_set_speed(0);
+    right_motor_set_speed(0);
+    chThdSleepMilliseconds(500);
     left_motor_set_speed(VITESSE_ROTATION_ATTAQUE_EXTERIEUR);
     right_motor_set_speed(VITESSE_ROTATION_ATTAQUE_INTERIEUR);
-    // pause d'un certain temps
+    chThdSleepMilliseconds(500);
+    left_motor_set_speed(0);
+    right_motor_set_speed(0);
+    chThdSleepMilliseconds(500);
     left_motor_set_speed(VITESSE_ROTATION_ATTAQUE_INTERIEUR);
     right_motor_set_speed(VITESSE_ROTATION_ATTAQUE_EXTERIEUR);
+    chThdSleepMilliseconds(500);
+    left_motor_set_speed(0);
+    right_motor_set_speed(0);
 }
 
-bool detection(){
-    if (get_distance_cm()<10){
-        return true;
+int8_t detection(void){
+    if (VL53L0X_get_dist_mm()<100){
+        return 1;
     }
     else {
-        return false;
+        return 0;
     }
 }

@@ -3,7 +3,7 @@
 #Simply adapt the lines below to be able to compile
 
 # Define project name here
-PROJECT = Noisy
+PROJECT = GuardBot
 
 #Define path to the e-puck2_main-processor folder
 GLOBAL_PATH = ../e-puck2_main-processor
@@ -14,6 +14,7 @@ CSRC += ./main.c \
 		./communications.c \
 		./fft.c \
 		./pickup.c \
+		./surveillance.c \
 
 #Header folders to include
 INCDIR += 
