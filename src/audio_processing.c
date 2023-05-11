@@ -5,11 +5,10 @@
 #include <motors.h>
 #include <audio/microphone.h>
 #include <arm_math.h>
+#include <arm_const_structs.h>
 
 #include "audio_processing.h"
 #include "main.h"
-#include "fft.h"
-#include "communications.h"
 
 //semaphore
 static BSEMAPHORE_DECL(micDataReady_sem, TRUE);
@@ -227,3 +226,8 @@ float* get_audio_buffer_ptr(BUFFER_NAME_t name){
 	}
 }
 
+void doFFT_optimized(uint16_t size, float* complex_buffer){
+	if(size == 1024)
+		arm_cfft_f32(&arm_cfft_sR_f32_len1024, complex_buffer, 0, 1);
+	
+}

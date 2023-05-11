@@ -11,8 +11,6 @@ GLOBAL_PATH = ../e-puck2_main-processor
 #Source files to include
 CSRC += ./main.c \
 		./audio_processing.c \
-		./communications.c \
-		./fft.c \
 		./pickup.c \
 
 #Header folders to include
