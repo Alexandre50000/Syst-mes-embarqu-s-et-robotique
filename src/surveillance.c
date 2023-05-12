@@ -9,8 +9,8 @@
 #include "surveillance.h"
 
 #define VITESSE_ROTATION_SURVEILLANCE       321   // Un demi tour par 2 secondes
-#define VITESSE_ROTATION_ATTAQUE_INTERIEUR  1100
-#define VITESSE_ROTATION_ATTAQUE_EXTERIEUR  1100
+#define VITESSE_ROTATION_ATTAQUE_INTERIEUR  900
+#define VITESSE_ROTATION_ATTAQUE_EXTERIEUR  900
 
 // SStatic variable
 static uint8_t detected = 0;
@@ -143,6 +143,13 @@ void attaque(void){
     chThdSleepMilliseconds(500);
     left_motor_set_speed(0);
     right_motor_set_speed(0);
+    chThdSleepMilliseconds(500);
+    left_motor_set_speed(-VITESSE_ROTATION_ATTAQUE_EXTERIEUR);
+    right_motor_set_speed(-VITESSE_ROTATION_ATTAQUE_EXTERIEUR);
+    chThdSleepMilliseconds(1500);
+    left_motor_set_speed(0);
+    right_motor_set_speed(0);
+
 }
 
 int8_t detection(void){
