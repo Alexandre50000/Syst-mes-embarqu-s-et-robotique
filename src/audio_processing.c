@@ -81,7 +81,6 @@ void compute_command(void){
 	if(freq >= SOUND_1_L && freq <= SOUND_1_H){
 		hertz = SOUND_1;
 	}
-	
 	else if(freq >= SOUND_2_L && freq <= SOUND_2_H){
 		hertz = SOUND_2;
 	}
@@ -98,7 +97,7 @@ void compute_command(void){
 		hertz = NOSOUND;
 	}
 
-	// gives a debounce to make sure it's the right command to removenois
+	// gives a debounce to make sure it's the right command to remove noise
 	if(hertz == last_hertz){
 		chBSemSignal(&commandReady);
 	}

@@ -88,11 +88,14 @@ int main(void){
 
     /* Infinite loop. */
     while (1) {
+        // UNCOMMENT FOR FULL EXPERIENCE
         // switch (get_command())
         // {
         // case NOSOUND:
         //     break;
         // case SOUND_1:
+        //     detection_init();
+        //     wait_surv_exit();
         //     break;
         // case SOUND_2:
         //     break;

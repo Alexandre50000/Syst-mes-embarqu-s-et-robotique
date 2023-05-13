@@ -45,25 +45,21 @@ uint16_t extract_line_width(uint8_t *buffer){
 	do{
 		wrong_line = 0;
 		//search for a begin
-		while(stop == 0 && i < (IMAGE_BUFFER_SIZE - WIDTH_SLOPE))
-		{ 
+		while(stop == 0 && i < (IMAGE_BUFFER_SIZE - WIDTH_SLOPE)){ 
 			//the slope must at least be WIDTH_SLOPE wide and is compared
 		    //to the mean of the image
-		    if(buffer[i] > mean && buffer[i+WIDTH_SLOPE] < mean)
-		    {
+		    if(buffer[i] < mean && buffer[i+WIDTH_SLOPE] > mean){
 		        begin = i;
 		        stop = 1;
 		    }
 		    i++;
 		}
 		//if a begin was found, search for an end
-		if (i < (IMAGE_BUFFER_SIZE - WIDTH_SLOPE) && begin)
-		{
+		if (i < (IMAGE_BUFFER_SIZE - WIDTH_SLOPE) && begin){
 		    stop = 0;
 		    
-		    while(stop == 0 && i < IMAGE_BUFFER_SIZE)
-		    {
-		        if(buffer[i] > mean && buffer[i-WIDTH_SLOPE] < mean)
+		    while(stop == 0 && i < IMAGE_BUFFER_SIZE){
+		        if(buffer[i] < mean && buffer[i-WIDTH_SLOPE] > mean)
 		        {
 		            end = i;
 		            stop = 1;
@@ -71,13 +67,12 @@ uint16_t extract_line_width(uint8_t *buffer){
 		        i++;
 		    }
 		    //if an end was not found
-		    if (i > IMAGE_BUFFER_SIZE || !end)
-		    {
+		    if (i > IMAGE_BUFFER_SIZE || !end){
 		        line_not_found = 1;
 		    }
 		}
-		else//if no begin was found
-		{
+		//if no begin was found
+		else{
 		    line_not_found = 1;
 		}
 
@@ -95,15 +90,16 @@ uint16_t extract_line_width(uint8_t *buffer){
 		begin = 0;
 		end = 0;
 		width = last_width;
-	}else{
+	}
+	else{
 		last_width = width = (end - begin);
 		line_position = (begin + end)/2; //gives the line position.
 	}
-
 	//sets a maximum width or returns the measured width
 	if((PXTOCM/width) > MAX_DISTANCE){
 		return PXTOCM/MAX_DISTANCE;
-	}else{
+	}
+	else{
 		return width;
 	}
 }
@@ -139,8 +135,6 @@ static THD_FUNCTION(ProcessImage, arg) {
 	uint8_t *img_buff_ptr;
 	uint8_t image[IMAGE_BUFFER_SIZE] = {0};
 	uint16_t lineWidth = 0;
-
-	bool send_to_computer = true;
 
     while(1){
     	//waits until an image has been captured

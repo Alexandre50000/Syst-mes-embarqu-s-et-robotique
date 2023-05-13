@@ -14,11 +14,12 @@
 
 // SStatic variable
 static uint8_t detected = 0;
+static uint8_t terminate = 0;
 
 //semaphore
-static BSEMAPHORE_DECL(detection_finished_sem, FALSE);
-static BSEMAPHORE_DECL(Rotation_finished_sem, TRUE);
-
+static BSEMAPHORE_DECL(detection_finished_sem, TRUE);
+static BSEMAPHORE_DECL(rotation_finished_sem, TRUE);
+static BSEMAPHORE_DECL(surv_exit_sem, TRUE);
 // Mode surveillance
 static THD_WORKING_AREA(waSurveillance, 256);
 static THD_FUNCTION(Surveillance, arg) {
@@ -27,69 +28,59 @@ static THD_FUNCTION(Surveillance, arg) {
     (void)arg;
 
     while(1){
-        // Si son4 go control mode
-        //if (get_value()==SOUND_4){
-            //MODE CONTROL;
-        //}
         // surveillance
         rotation_surveillance();
         
     }
 }
 
-
-
-void rotation_quart_gauche(void){
+void rotation_180(uint8_t dir){
     if(detected){
-        chBSemSignal(&Rotation_finished_sem);
+        chBSemSignal(&rotation_finished_sem);
         chBSemWait(&detection_finished_sem);
+    }else if(terminate){        
+        left_motor_set_speed(0);
+        right_motor_set_speed(0);
+        chThdExit(MSG_OK);
     }
     else{
-        left_motor_set_speed(-VITESSE_ROTATION_SURVEILLANCE);
-        right_motor_set_speed(VITESSE_ROTATION_SURVEILLANCE);
-    }
-    uint8_t counter = 0; // Jusqu'à 36 pour faire un demi tour
-
-    while(counter < 37 && !detected){
-        chThdSleepMilliseconds(56);
-        chBSemSignal(&Rotation_finished_sem);
-        ++counter;
-    }
-}
-void rotation_quart_droite(void){
-    if(detected){
-        chBSemSignal(&Rotation_finished_sem);
-        chBSemWait(&detection_finished_sem);
-    }
-    else{
+        if(dir){
         left_motor_set_speed(VITESSE_ROTATION_SURVEILLANCE);
         right_motor_set_speed(-VITESSE_ROTATION_SURVEILLANCE);
+        }
+        else{
+        left_motor_set_speed(-VITESSE_ROTATION_SURVEILLANCE);
+        right_motor_set_speed(VITESSE_ROTATION_SURVEILLANCE);}
     }
     uint8_t counter = 0; // Jusqu'à 36 pour faire un demi tour
 
     while(counter < 37 && !detected){
         chThdSleepMilliseconds(56);
-        chBSemSignal(&Rotation_finished_sem);
+        chBSemSignal(&rotation_finished_sem);
         ++counter;
     }
 }
 
 void rotation_surveillance(void){
-    rotation_quart_gauche();
+    rotation_180(0);
     reset_motors();
     chThdSleepSeconds(1); // PAUSE 1s
-    rotation_quart_droite();
+    rotation_180(1);
     reset_motors();
     chThdSleepSeconds(1); // PAUSE 1s
-    rotation_quart_gauche();
+    rotation_180(0);
     reset_motors();
     chThdSleepSeconds(1); // PAUSE
 } 
 
 void reset_motors(void){
     if(detected){
-        chBSemSignal(&Rotation_finished_sem);
+        chBSemSignal(&rotation_finished_sem);
         chBSemWait(&detection_finished_sem);
+    }else if(terminate){        
+        left_motor_set_speed(0);
+        right_motor_set_speed(0);
+        chThdExit(MSG_OK);
     }
     left_motor_set_speed(0);
     right_motor_set_speed(0);
@@ -102,17 +93,24 @@ static THD_FUNCTION(Detection, arg) {
     chRegSetThreadName(__FUNCTION__);
     (void)arg;
 
-    
+    thread_t* surv = chThdCreateStatic(waSurveillance, sizeof(waSurveillance), NORMALPRIO, Surveillance, NULL);
 
-    while(1){
+    while(!terminate){
         detected = detection();
+        uint8_t com = get_command();
         if (detected){
             // Attends la fin d'une rotation
-            chBSemWait(&Rotation_finished_sem);
+            chBSemWait(&rotation_finished_sem);
             attaque();
             // detection passe à false
             detected = 0;
             chBSemSignal(&detection_finished_sem);
+
+        }
+        else if(!(com == SOUND_1 || com == NOSOUND)){
+            terminate = 1;
+            chThdWait(surv);
+            chBSemSignal(&surv_exit_sem);
 
         }
         chThdSleepMilliseconds(20);
@@ -121,7 +119,6 @@ static THD_FUNCTION(Detection, arg) {
 
 void detection_init(void){
     chThdCreateStatic(waDetection, sizeof(waDetection), NORMALPRIO, Detection, NULL);
-    chThdCreateStatic(waSurveillance, sizeof(waSurveillance), NORMALPRIO, Surveillance, NULL);
 }
 
 void middle(void){
@@ -162,11 +159,14 @@ void attaque(void){
 
 }
 
-int8_t detection(void){
+uint8_t detection(void){
     if (get_found() && (get_distance_cm() < 10.0)){
         return 1;
     }
     else {
         return 0;
     }
+}
+void wait_surv_exit(void){
+    chBSemWait(&surv_exit_sem);
 }
