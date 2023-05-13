@@ -14,10 +14,12 @@
 #include <leds.h>
 #include <spi_comm.h>
 #include <sensors/imu.h>
+#include <camera/po8030.h>
 
 
 #include "main.h"
 #include "audio_processing.h"
+#include "image_processing.h"
 #include "pickup.h"
 #include "surveillance.h"
 #include "vadrouille.h"
@@ -72,11 +74,17 @@ int main(void){
     imu_start();
     calibrate_acc();
 
+    //inits camera
+    dcmi_start();
+	po8030_start();
+
     mic_start(&processAudioData);
 
     
     pickup_init();
     listen_init();
+    process_image_start();
+    detection_init();
 
     /* Infinite loop. */
     while (1) {
@@ -91,15 +99,11 @@ int main(void){
         // case SOUND_3:
         //     break;
         // case SOUND_4:
+        //     control_init();
+        //     wait_control_exit();
         //     break;
         // }
-        
-        chprintf((BaseSequentialStream *) &SD3, "Checking command \n");
-        if(get_command() == SOUND_4){
-            chprintf((BaseSequentialStream *) &SD3, "Found command \n");
-            control_init();
-            wait_control_exit();
-        }
+
         chThdSleepMilliseconds(50);
         }
 }

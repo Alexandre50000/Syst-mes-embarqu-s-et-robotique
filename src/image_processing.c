@@ -9,14 +9,19 @@
 
 #include "image_processing.h"
 #include "main.h"
+#define RED 		1
+#define GREEN		0
 
 static float distance_cm = 0;
 static uint16_t line_position = IMAGE_BUFFER_SIZE/2;	//middle
+static uint8_t detect_color = GREEN;
+static uint8_t line_not_found = 0;
 
 // Extracts only the red pixels by default
 
 //semaphore
 static BSEMAPHORE_DECL(image_ready_sem, TRUE);
+static BSEMAPHORE_DECL(line_found_sem, TRUE);
 
 /*
  *  Returns the line's width extracted from the image buffer given
@@ -25,8 +30,9 @@ static BSEMAPHORE_DECL(image_ready_sem, TRUE);
 uint16_t extract_line_width(uint8_t *buffer){
 
 	uint16_t i = 0, begin = 0, end = 0, width = 0;
-	uint8_t stop = 0, wrong_line = 0, line_not_found = 0;
+	uint8_t stop = 0, wrong_line = 0;
 	uint32_t mean = 0;
+	line_not_found = 0;
 
 	static uint16_t last_width = PXTOCM/GOAL_DISTANCE;
 
@@ -142,41 +148,51 @@ static THD_FUNCTION(ProcessImage, arg) {
 		//gets the pointer to the array filled with the last image in RGB565    
 		img_buff_ptr = dcmi_get_last_image_ptr();
 
-		// extraire le rouge
-        toggle_rgb_led(USED_RGB_LED, RED_LED, INTENSITY_RGB_LED);
-        //Extracts only the red pixels
-        for(uint16_t i = 0 ; i < (2 * IMAGE_BUFFER_SIZE) ; i+=2){
-            //extracts 5 MSbits of the MSbyte (First byte in big-endian format)
-            //takes nothing from the second byte
-            image[i/2] = (uint8_t)img_buff_ptr[i] & 0xF8;
-        }
+        
+		if(detect_color){
+			//Extracts only the red pixels
+        	for(uint16_t i = 0 ; i < (2 * IMAGE_BUFFER_SIZE) ; i+=2){
+            	//extracts 5 MSbits of the MSbyte (First byte in big-endian format)
+            	//takes nothing from the second byte
+            	image[i/2] = (uint8_t)img_buff_ptr[i] & 0xF8;
+        	}
+		}
+		else{
+			// Extracts only the green pixels
+			for(uint16_t i = 0 ; i < (2 * IMAGE_BUFFER_SIZE) ; i+=2){
+				//extracts 3 LSbits of the first byte and the 3 MSbits of second byte
+				image[i/2] = (((uint8_t)img_buff_ptr[i] & 0x07) << 5 )
+							+ (((uint8_t)img_buff_ptr[i+1] & 0xE0) >> 3);
+			}
+		}
 
 		//search for a line in the image and gets its width in pixels
 		lineWidth = extract_line_width(image);
-
-		//converts the width into a distance between the robot and the target
-		if(lineWidth){
+		if(!line_not_found){
 			distance_cm = PXTOCM/lineWidth;
 		}
-
-		if(send_to_computer){
-			//sends to the computer the image
-			SendUint8ToComputer(image, IMAGE_BUFFER_SIZE);
-		}
-		//invert the bool
-		send_to_computer = !send_to_computer;
     }
-}
-
-float get_distance_cm(void){
-	return distance_cm;
 }
 
 uint16_t get_line_position(void){
 	return line_position;
 }
 
+uint8_t get_found(void){
+	return !line_not_found;
+}
+
+float get_distance_cm(void){
+	return distance_cm;
+}
+
+
 void process_image_start(void){
 	chThdCreateStatic(waProcessImage, sizeof(waProcessImage), NORMALPRIO, ProcessImage, NULL);
 	chThdCreateStatic(waCaptureImage, sizeof(waCaptureImage), NORMALPRIO, CaptureImage, NULL);
+}
+
+void select_color_detection(uint16_t choice_detect_color){
+	// Set off the RGB LED
+	detect_color = choice_detect_color;
 }

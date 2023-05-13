@@ -124,36 +124,46 @@ void detection_init(void){
     chThdCreateStatic(waSurveillance, sizeof(waSurveillance), NORMALPRIO, Surveillance, NULL);
 }
 
+void middle(void){
+    uint16_t line_pos = get_line_position();
+    uint8_t middle = 0;
+    do{
+        if(line_pos < (IMAGE_BUFFER_SIZE/2-4)){
+            right_motor_set_speed(600);
+            left_motor_set_speed(-600);
+        }
+        else if(line_pos > (IMAGE_BUFFER_SIZE/2+4)){
+            right_motor_set_speed(-600);
+            left_motor_set_speed(600);
+        }
+        else{
+            right_motor_set_speed(0);
+            left_motor_set_speed(0);
+
+            middle = 1;
+        }
+        chThdSleepMilliseconds(50);
+    }while(!middle);
+}
+
 void attaque(void){
-    // 3 slash en avancant
-    left_motor_set_speed(VITESSE_ROTATION_ATTAQUE_INTERIEUR);
-    right_motor_set_speed(VITESSE_ROTATION_ATTAQUE_EXTERIEUR);
-    chThdSleepMilliseconds(500);
-    left_motor_set_speed(0);
-    right_motor_set_speed(0);
-    chThdSleepMilliseconds(500);
-    left_motor_set_speed(VITESSE_ROTATION_ATTAQUE_EXTERIEUR);
-    right_motor_set_speed(VITESSE_ROTATION_ATTAQUE_INTERIEUR);
-    chThdSleepMilliseconds(500);
-    left_motor_set_speed(0);
-    right_motor_set_speed(0);
-    chThdSleepMilliseconds(500);
-    left_motor_set_speed(VITESSE_ROTATION_ATTAQUE_INTERIEUR);
-    right_motor_set_speed(VITESSE_ROTATION_ATTAQUE_EXTERIEUR);
-    chThdSleepMilliseconds(500);
-    left_motor_set_speed(0);
-    right_motor_set_speed(0);
-    chThdSleepMilliseconds(500);
-    left_motor_set_speed(-VITESSE_ROTATION_ATTAQUE_EXTERIEUR);
-    right_motor_set_speed(-VITESSE_ROTATION_ATTAQUE_EXTERIEUR);
-    chThdSleepMilliseconds(1500);
+    // thrusts foward to target
+    uint16_t distance_mm = VL53L0X_get_dist_mm();
+    uint16_t steps = (distance_mm/130)*1000;
+
+    left_motor_set_speed(steps);
+    right_motor_set_speed(steps);
+    chThdSleepMilliseconds(1000);
+    left_motor_set_speed(-steps);
+    right_motor_set_speed(-steps);
+    chThdSleepMilliseconds(1000);
     left_motor_set_speed(0);
     right_motor_set_speed(0);
 
 }
 
 int8_t detection(void){
-    if (VL53L0X_get_dist_mm()<100){
+    if (get_found() && (get_distance_cm() < 10.0)){
         return 1;
     }
     else {
