@@ -14,6 +14,7 @@ CSRC += ./main.c \
 		./pickup.c \
 		./surveillance.c \
 		./vadrouille.c \
+		./control_robot.c \
 
 #Header folders to include
 INCDIR += 

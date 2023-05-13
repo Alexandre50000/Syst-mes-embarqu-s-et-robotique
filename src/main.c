@@ -21,6 +21,7 @@
 #include "pickup.h"
 #include "surveillance.h"
 #include "vadrouille.h"
+#include "control_robot.h"
 
 // declares bus to start bus communication for optical sensors
 messagebus_t bus;
@@ -79,6 +80,26 @@ int main(void){
 
     /* Infinite loop. */
     while (1) {
+        // switch (get_command())
+        // {
+        // case NOSOUND:
+        //     break;
+        // case SOUND_1:
+        //     break;
+        // case SOUND_2:
+        //     break;
+        // case SOUND_3:
+        //     break;
+        // case SOUND_4:
+        //     break;
+        // }
+        
+        chprintf((BaseSequentialStream *) &SD3, "Checking command \n");
+        if(get_command() == SOUND_4){
+            chprintf((BaseSequentialStream *) &SD3, "Found command \n");
+            control_init();
+            wait_control_exit();
+        }
         chThdSleepMilliseconds(50);
         }
 }

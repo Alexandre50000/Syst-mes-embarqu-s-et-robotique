@@ -91,6 +91,9 @@ void compute_command(void){
 	else if(freq >= SOUND_4_L && freq <= SOUND_4_H){
 		hertz = SOUND_4;
 	}
+	else if(freq >= SOUND_5_L && freq <= SOUND_5_H){
+		hertz = SOUND_5;
+	} 
 	else{
 		hertz = NOSOUND;
 	}

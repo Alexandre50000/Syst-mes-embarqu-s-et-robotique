@@ -1,7 +1,11 @@
-#define VITESSE_AVANCE_CONTROL   3
-#define VITESSE_ROTATION_CONTROL 1
+#ifndef CONTROL_ROBOT_H
+#define CONTROL_ROBOT_H
 
-//semaphore
-static BSEMAPHORE_DECL(control_out_sem, TRUE);
 
-void control_init();
+#define VITESSE_AVANCE_CONTROL   800
+#define VITESSE_ROTATION_CONTROL 320
+
+void control_init(void);
+void wait_control_exit(void);
+
+#endif
