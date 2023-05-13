@@ -19,7 +19,8 @@
 #include "main.h"
 #include "audio_processing.h"
 #include "pickup.h"
-
+#include "surveillance.h"
+#include "vadrouille.h"
 
 // declares bus to start bus communication for optical sensors
 messagebus_t bus;
