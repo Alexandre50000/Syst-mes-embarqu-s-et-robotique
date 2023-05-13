@@ -82,13 +82,9 @@ int main(void){
     imu_start();
     calibrate_acc();
 
-<<<<<<< HEAD
-    //pickup_init();
-=======
     pickup_init();
     listen_init();
     vadrouille_init();
->>>>>>> (projet)_vadrouille
 
     mic_start(&processAudioData);
 
