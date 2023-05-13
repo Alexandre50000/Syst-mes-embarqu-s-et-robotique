@@ -21,7 +21,11 @@
 #include "fft.h"
 #include "communications.h"
 #include "pickup.h"
+<<<<<<< HEAD
 #include "surveillance.h"
+=======
+#include "vadrouille.h"
+>>>>>>> (projet)_vadrouille
 
 //uncomment to send the FFTs results from the real microphones
 //#define SEND_FROM_MIC
@@ -78,7 +82,13 @@ int main(void){
     imu_start();
     calibrate_acc();
 
+<<<<<<< HEAD
     //pickup_init();
+=======
+    pickup_init();
+    listen_init();
+    vadrouille_init();
+>>>>>>> (projet)_vadrouille
 
     mic_start(&processAudioData);
 
