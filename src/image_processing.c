@@ -14,7 +14,7 @@
 
 static float distance_cm = 0;
 static uint16_t line_position = IMAGE_BUFFER_SIZE/2;	//middle
-static uint8_t detect_color = GREEN;
+static uint8_t detect_color = RED;
 static uint8_t line_not_found = 0;
 
 // Extracts only the red pixels by default

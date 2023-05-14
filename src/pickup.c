@@ -3,6 +3,7 @@
 #include <sensors/proximity.h>
 #include <leds.h>
 #include <sensors/imu.h>
+#include <audio/audio_thread.h>
 
 
 
@@ -33,14 +34,17 @@ static THD_FUNCTION(Pickup, arg) {
 
 void start_led_sequence(void){
     set_led(NUM_LED, 1);
+    dac_play(440);
     chThdSleepMilliseconds(100);
     set_led(NUM_LED,0);
     set_rgb_led(LED2,0,255,0);
     set_rgb_led(LED4,0,255,0);
     set_rgb_led(LED6,0,255,0);
     set_rgb_led(LED8,0,255,0);
+    dac_play(400);
     chThdSleepMilliseconds(100);
     clear_leds();
+    dac_stop();
 }
 
 void pickup_init(void){

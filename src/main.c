@@ -15,6 +15,8 @@
 #include <spi_comm.h>
 #include <sensors/imu.h>
 #include <camera/po8030.h>
+#include <audio/audio_thread.h>
+
 
 
 #include "main.h"
@@ -51,6 +53,9 @@ int main(void){
     /** Inits the Inter Process Communication bus. */
     messagebus_init(&bus, &bus_lock, &bus_condvar);
 
+    // inits speaker
+    dac_start();
+
     //starts the serial communication
     serial_start();
 
@@ -84,7 +89,6 @@ int main(void){
     pickup_init();
     listen_init();
     process_image_start();
-    detection_init();
 
     /* Infinite loop. */
     while (1) {

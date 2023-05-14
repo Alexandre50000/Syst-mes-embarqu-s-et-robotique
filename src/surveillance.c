@@ -11,6 +11,7 @@
 #define VITESSE_ROTATION_SURVEILLANCE       321   // Un demi tour par 2 secondes
 #define VITESSE_ROTATION_ATTAQUE_INTERIEUR  900
 #define VITESSE_ROTATION_ATTAQUE_EXTERIEUR  900
+#define DETECTION_DISTANCE                  100   // En mm
 
 // SStatic variable
 static uint8_t detected = 0;
@@ -122,14 +123,15 @@ void detection_init(void){
 }
 
 void middle(void){
-    uint16_t line_pos = get_line_position();
+    
     uint8_t middle = 0;
     do{
-        if(line_pos < (IMAGE_BUFFER_SIZE/2-4)){
+        uint16_t line_pos = get_line_position();
+        if(line_pos < (IMAGE_BUFFER_SIZE/2-20)){
             right_motor_set_speed(600);
             left_motor_set_speed(-600);
         }
-        else if(line_pos > (IMAGE_BUFFER_SIZE/2+4)){
+        else if(line_pos > (IMAGE_BUFFER_SIZE/2+20)){
             right_motor_set_speed(-600);
             left_motor_set_speed(600);
         }
@@ -139,13 +141,18 @@ void middle(void){
 
             middle = 1;
         }
-        chThdSleepMilliseconds(50);
+        chThdSleepMilliseconds(20);
     }while(!middle);
 }
 
 void attaque(void){
+    // Rotates until target is in the middle of the camera
+    middle();
     // thrusts foward to target
     uint16_t distance_mm = VL53L0X_get_dist_mm();
+    if(distance_mm > DETECTION_DISTANCE){
+        distance_mm = DETECTION_DISTANCE;
+    }
     uint16_t steps = (distance_mm/130)*1000;
 
     left_motor_set_speed(steps);
@@ -160,7 +167,7 @@ void attaque(void){
 }
 
 uint8_t detection(void){
-    if (get_found() && (get_distance_cm() < 10.0)){
+    if (get_found() && (VL53L0X_get_dist_mm() < 10*DETECTION_DISTANCE)){
         return 1;
     }
     else {
