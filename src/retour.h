@@ -2,7 +2,7 @@
 #define RETOUR_H
 
 
-void deplacement_base(void);
+void move_to_base(void);
 void retour_init(void);
 void wait_rtrn_exit(void);
 

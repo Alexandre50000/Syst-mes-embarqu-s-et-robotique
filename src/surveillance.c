@@ -11,7 +11,6 @@
 #define VITESSE_ROTATION_SURVEILLANCE       321   // Un demi tour par 2 secondes
 #define VITESSE_ROTATION_ATTAQUE_INTERIEUR  900
 #define VITESSE_ROTATION_ATTAQUE_EXTERIEUR  900
-#define DETECTION_DISTANCE                  100   // En mm
 #define VITESSE_ROTATION_MIDDLE             178   // Vitesse pour faire 1° de deplacement en 20 ms
 
 // Static variables
@@ -101,15 +100,15 @@ static THD_FUNCTION(Detection, arg) {
         detected = detection();
         uint8_t com = get_command();
         if (detected){
-            // Attends la fin d'une rotation
+            // Waits until end of rotation
             chBSemWait(&rotation_finished_sem);
-            attaque();
-            // detection passe à false
+            attack();
+            // Resets detection.
             detected = 0;
             chBSemSignal(&detection_finished_sem);
 
         }
-        else if(!(com == SOUND_1 || com == NOSOUND)){
+        else if(com == SOUND_5){
             terminate = 1;
             chThdWait(surv);
             chBSemSignal(&surv_exit_sem);
@@ -120,33 +119,42 @@ static THD_FUNCTION(Detection, arg) {
 }
 
 void detection_init(void){
+    terminate = 0;
     chThdCreateStatic(waDetection, sizeof(waDetection), NORMALPRIO, Detection, NULL);
 }
 
+
+/*
+* @brief This function moves the robot to the middle of the target
+*
+*/
 void middle(void){
     
+    systime_t time;
+
     uint8_t middle = 0;
     do{
-        uint16_t line_pos = get_line_position();
-        if(line_pos < (IMAGE_BUFFER_SIZE/2-20)){
-            right_motor_set_speed(VITESSE_ROTATION_MIDDLE);
-            left_motor_set_speed(-VITESSE_ROTATION_MIDDLE);
-        }
-        else if(line_pos > (IMAGE_BUFFER_SIZE/2+20)){
-            right_motor_set_speed(-VITESSE_ROTATION_MIDDLE);
-            left_motor_set_speed(VITESSE_ROTATION_MIDDLE);
-        }
-        else{
+        time = chVTGetSystemTime();
+        int16_t line_error = get_line_position()-IMAGE_BUFFER_SIZE/2;
+        if(abs(line_error) < 70){
             right_motor_set_speed(0);
             left_motor_set_speed(0);
-
             middle = 1;
         }
-        chThdSleepMilliseconds(20);
+        else{
+            right_motor_set_speed(-line_error*ROTATION_COEFF);
+            left_motor_set_speed(line_error*ROTATION_COEFF);
+
+
+        }
+        chThdSleepUntilWindowed(time, time + MS2ST(10)); // 100 Hz
     }while(!middle);
 }
 
-void attaque(void){
+/*
+* @brief Stwrts attack sequence
+*/
+void attack(void){
     // Rotates until target is in the middle of the camera
     middle();
     // thrusts foward to target
@@ -154,7 +162,7 @@ void attaque(void){
     if(distance_mm > DETECTION_DISTANCE){
         distance_mm = DETECTION_DISTANCE;
     }
-    uint16_t steps = (distance_mm/130)*1000;
+    uint16_t steps = (uint16_t)(((float)distance_mm/130.0)*1000);
 
     left_motor_set_speed(steps);
     right_motor_set_speed(steps);
@@ -168,7 +176,7 @@ void attaque(void){
 }
 
 uint8_t detection(void){
-    if (get_found() && (VL53L0X_get_dist_mm() < 10*DETECTION_DISTANCE)){
+    if (get_found() && (VL53L0X_get_dist_mm() < DETECTION_DISTANCE)){
         return 1;
     }
     else {

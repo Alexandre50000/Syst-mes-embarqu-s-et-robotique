@@ -1,7 +1,5 @@
 #include <ch.h>
 #include <hal.h>
-#include <usbcfg.h>
-#include <chprintf.h>
 #include <motors.h>
 #include <audio/microphone.h>
 #include <arm_math.h>
@@ -27,8 +25,6 @@ static float micBack_output[FFT_SIZE];
 
 // Static variables containing the frequency of command
 static int16_t hertz = 0;
-static int16_t max_l;
-static int16_t max_r;
 
 /*  
 *   Thread that listens for command
@@ -71,10 +67,7 @@ void compute_command(void){
 		average /= 4;
 		if(average > max_norm){
 			max_norm = average;
-			freq = i;
-			max_l = micLeft_output[i];
-			max_r = micRight_output[i];
-			
+			freq = i;			
 		}
 	}
 
@@ -182,18 +175,20 @@ void wait_for_data(void){
 	chBSemWait(&micDataReady_sem);
 }
 
-
+/**
+*	@brief Initializes the listen thread
+*/
 void listen_init(void){
 	chThdCreateStatic(waListen, sizeof(waListen), NORMALPRIO, Listen, NULL);
 }
+
 
 /**
 *	@brief Returns command when ready
 *	@return One of the heard commands
 *
 */
-
-int16_t get_command(void){
+uint8_t get_command(void){
 	chBSemWait(&commandReady);
 	return hertz;
 }
@@ -229,7 +224,7 @@ float* get_audio_buffer_ptr(BUFFER_NAME_t name){
 }
 
 void doFFT_optimized(uint16_t size, float* complex_buffer){
-	if(size == 1024)
+	if(size == FFT_SIZE)
 		arm_cfft_f32(&arm_cfft_sR_f32_len1024, complex_buffer, 0, 1);
 	
 }

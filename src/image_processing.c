@@ -1,23 +1,19 @@
 #include <ch.h>
 #include <hal.h>
-#include <chprintf.h>
-#include <usbcfg.h>
 #include <camera/po8030.h>
-
-//RGB LED used for interaction with plotImage Python code
-#include <leds.h>
 
 #include "image_processing.h"
 #include "main.h"
+
+// Static variables
 static float distance_cm = 0;
 static uint16_t line_position = IMAGE_BUFFER_SIZE/2;	//middle
 static uint8_t detect_color = RED;
 static uint8_t line_not_found = 1;
 
-// Extracts only the red pixels by default
-
 //semaphore
 static BSEMAPHORE_DECL(image_ready_sem, TRUE);
+static BSEMAPHORE_DECL(process_ready_sem, TRUE);
 
 /*
  *  Returns the line's width extracted from the image buffer given
@@ -44,7 +40,7 @@ uint16_t extract_line_width(uint8_t *buffer){
 		while(stop == 0 && i < (IMAGE_BUFFER_SIZE - WIDTH_SLOPE)){ 
 			//the slope must at least be WIDTH_SLOPE wide and is compared
 		    //to the mean of the image
-		    if(buffer[i] < mean && buffer[i+WIDTH_SLOPE] > mean){
+		    if(buffer[i] < mean && buffer[i+WIDTH_SLOPE] > mean && buffer[i] > MINMUM_DETECT){
 		        begin = i;
 		        stop = 1;
 		    }
@@ -161,14 +157,17 @@ static THD_FUNCTION(ProcessImage, arg) {
 		if(!line_not_found){
 			distance_cm = PXTOCM/lineWidth;
 		}
+		chBSemSignal(&process_ready_sem);
     }
 }
 
 uint16_t get_line_position(void){
+	chBSemWait(&process_ready_sem);
 	return line_position;
 }
 
 uint8_t get_found(void){
+	chBSemWait(&process_ready_sem);
 	return !line_not_found;
 }
 
@@ -176,7 +175,9 @@ float get_distance_cm(void){
 	return distance_cm;
 }
 
-
+/*
+* Initializes image processing threads
+*/
 void process_image_start(void){
 	chThdCreateStatic(waProcessImage, sizeof(waProcessImage), NORMALPRIO, ProcessImage, NULL);
 	chThdCreateStatic(waCaptureImage, sizeof(waCaptureImage), NORMALPRIO, CaptureImage, NULL);

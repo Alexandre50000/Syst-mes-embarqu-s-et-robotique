@@ -13,9 +13,11 @@
 
 #define MIN_DISTANCE    100
 #define MIN_SENSORS     4    //Minimum amount of sensors that need to trigger befor panic
-#define THRESHOLD          4000 //Value of IMU when acc is equal to around 0.25g        
+#define THRESHOLD       4000 //Value of IMU when acc is equal to around 0.25g        
 
-
+/*
+* Thread that detects pickup then sounds speaker and activates leds
+*/
 static THD_WORKING_AREA(waPickup, 256);
 static THD_FUNCTION(Pickup, arg) {
 
@@ -51,6 +53,11 @@ void pickup_init(void){
     chThdCreateStatic(waPickup, sizeof(waPickup), NORMALPRIO, Pickup, NULL);
 }
 
+
+/*
+* @brief This function checks for pickup
+* @returns 1 if it detects pickup, 0 otherwise
+*/
 int8_t check_pickup(void){
     int8_t triggers;
     triggers = 0;

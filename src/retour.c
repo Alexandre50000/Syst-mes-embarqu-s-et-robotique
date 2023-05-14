@@ -8,14 +8,15 @@
 #include "audio_processing.h"
 #include "retour.h"
 
-#define ROTATION_SPEED              160 // Un quart de tour en 2 secondes
-#define VITESSE_ROTATION_MIDDLE     178   // Vitesse pour faire 1° de deplacement en 20 ms
-#define MAX_DIST_ONE_SEC 130 // en mm
+#define ROTATION_SPEED      160 // One quarter turn in 2s
+#define MAX_DIST_ONE_SEC    130 // in mm
 
-// semaphore
+// Semaphore
 static BSEMAPHORE_DECL(rtrn_exit_sem, TRUE);
 
-// Mode retour à la base
+/*
+* Thread that searches for base and return to it.
+*/
 static THD_WORKING_AREA(waRetour, 256);
 static THD_FUNCTION(Retour, arg) {
 
@@ -26,39 +27,38 @@ static THD_FUNCTION(Retour, arg) {
     left_motor_set_speed(-ROTATION_SPEED);
 
     while(1){
-        // cherche base
+        // Searches for base
         if(get_found()){
-            deplacement_base();
+            move_to_base();
         }
         chThdSleepMilliseconds(50);
     }
 }
 
-void deplacement_base(void){
+void move_to_base(void){
+    systime_t time;
     right_motor_set_speed(0);
     left_motor_set_speed(0);
 
     uint8_t middle = 0;
     do{
-        uint16_t line_pos = get_line_position();
-        if(line_pos < (IMAGE_BUFFER_SIZE/2-20)){
-            right_motor_set_speed(VITESSE_ROTATION_MIDDLE);
-            left_motor_set_speed(-VITESSE_ROTATION_MIDDLE);
-        }
-        else if(line_pos > (IMAGE_BUFFER_SIZE/2+20)){
-            right_motor_set_speed(-VITESSE_ROTATION_MIDDLE);
-            left_motor_set_speed(VITESSE_ROTATION_MIDDLE);
-        }
-        else{
+        time = chVTGetSystemTime();
+        int16_t line_error = get_line_position()-IMAGE_BUFFER_SIZE/2;
+        if(abs(line_error) < 10){
             right_motor_set_speed(0);
             left_motor_set_speed(0);
-
             middle = 1;
         }
-        chThdSleepMilliseconds(20);
+        else{
+            right_motor_set_speed(-line_error*ROTATION_COEFF);
+            left_motor_set_speed(line_error*ROTATION_COEFF);
+
+
+        }
+        chThdSleepUntilWindowed(time, time + MS2ST(10)); // 100 Hz
     }while(!middle);
 
-    uint16_t dist = (uint16_t)(get_distance_cm()*10);
+    uint16_t dist = (uint16_t)(VL53L0X_get_dist_mm());
     float time_advance = 1000*(float)(dist-20)/MAX_DIST_ONE_SEC; // We want at least two cm of distance between object
 
     left_motor_set_speed(MAX_SPEED);
@@ -66,7 +66,7 @@ void deplacement_base(void){
 
     chThdSleepMilliseconds((uint16_t)time_advance);
 
-    // Fait un demi-tour
+    // Turns around
     left_motor_set_speed(MAX_SPEED);
     right_motor_set_speed(-MAX_SPEED);
 
@@ -75,7 +75,7 @@ void deplacement_base(void){
     
     left_motor_set_speed(0);
     right_motor_set_speed(0);
-    // Signal au mian que mode finit
+    // Signal to main that base was found
     chBSemSignal(&rtrn_exit_sem);
     chThdExit(MSG_OK);
 }

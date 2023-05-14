@@ -4,16 +4,21 @@
 #include <hal.h>
 #include <motors.h>
 #include <sensors/VL53L0X/VL53L0X.h>
+#include <sensors/proximity.h>
 
 
 #include "vadrouille.h"
 #include "main.h"
 #include "audio_processing.h"
+#include "image_processing.h"
+#include "surveillance.h"
 
 
 // Définition des constantes
-#define TURN_TIME   320201 // Durée de rotation en microsecondes
-#define MAX_DIST_ONE_SEC 130 // en mm
+#define TURN_TIME           320201 // Durée de rotation en microsecondes
+#define MAX_DIST_ONE_SEC    130 // en mm
+#define THRESH              2500
+#define MIN_DIST            20 //en mm
 
 //semaphore
 static BSEMAPHORE_DECL(vadr_exit_sem, TRUE);
@@ -28,24 +33,35 @@ void randomMove(void) {
     }
 
     // Si cible/mur est trop proche, ne pas avancer
-    if(dist > 20){
-    float time_advance = 1000*(float)(dist-20)/MAX_DIST_ONE_SEC; // We want at least two cm of distance between object
+    uint16_t prox1 = get_prox(0);
+    uint16_t prox2 = get_prox(1);
+    uint16_t prox7 = get_prox(6);
+    uint16_t prox8 = get_prox(7);
 
-    // Appliquer les vitesses aux moteurs de mouvement
-    left_motor_set_speed(MAX_SPEED);
-    right_motor_set_speed(MAX_SPEED);
 
-    chThdSleepMilliseconds((uint16_t)time_advance);
+    if(dist > 20 && prox1 < THRESH && prox2 < THRESH && prox7 < THRESH && prox8 < THRESH){
+        if(!get_found()){
+        // We want at least two cm of distance between object
+        float time_advance = MAX_SPEED*(float)(dist-MIN_DIST)/MAX_DIST_ONE_SEC; 
+        // Appliquer les vitesses aux moteurs de mouvement
+        left_motor_set_speed(MAX_SPEED);
+        right_motor_set_speed(MAX_SPEED);
+        chThdSleepMilliseconds((uint16_t)time_advance);
+        }else{
+            attack();
+        }
+
     }
 
     left_motor_set_speed(0);
     right_motor_set_speed(0);
 
     check_command(500);
-    
 
-    // Attendre une direction aléatoire pour la rotation
+    // Generates randomly which direction to go.
     int8_t turndir = rand() % 2;
+    systime_t time;
+    time = chVTGetSystemTime();
     if(turndir){
         left_motor_set_speed(-MAX_SPEED);
         right_motor_set_speed(MAX_SPEED);
@@ -56,9 +72,8 @@ void randomMove(void) {
         right_motor_set_speed(-MAX_SPEED);
 
     }
-    chThdSleepMicroseconds(TURN_TIME);
+    chThdSleepUntilWindowed(time, time + US2ST(TURN_TIME));
 
-    // Arrêter les moteurs après la rotation
     left_motor_set_speed(0);
     right_motor_set_speed(0);
 
@@ -93,16 +108,16 @@ static THD_FUNCTION(Vadrouille, arg) {
 void check_command(uint16_t waittime){
     uint16_t counter = waittime/50;
     while(counter != 0){
-    if(get_command() == SOUND_5){
-        chBSemSignal(&vadr_exit_sem);
-        chThdExit(MSG_OK);
-    }
-    counter -= 1;
-    chThdSleepMilliseconds(50);
+        uint8_t com = get_command();
+        if(com == SOUND_5){
+            chBSemSignal(&vadr_exit_sem);
+            chThdExit(MSG_OK);
+        }
+        counter -= 1;
+        chThdSleepMilliseconds(50);
     }
 
 }
-
 
 void vadrouille_init(void){
     chThdCreateStatic(waVadrouille, sizeof(waVadrouille), NORMALPRIO, Vadrouille, NULL);

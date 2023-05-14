@@ -4,10 +4,7 @@
 #include <ch.h>
 #include <hal.h>
 #include <memory_protection.h>
-#include <usbcfg.h>
-#include <chprintf.h>
 #include <motors.h>
-#include <audio/microphone.h>
 #include <arm_math.h>
 #include <sensors/VL53L0X/VL53L0X.h>
 #include <sensors/proximity.h>
@@ -16,7 +13,7 @@
 #include <sensors/imu.h>
 #include <camera/po8030.h>
 #include <audio/audio_thread.h>
-
+#include <audio/microphone.h>
 
 
 #include "main.h"
@@ -35,17 +32,6 @@ CONDVAR_DECL(bus_condvar);
 
 parameter_namespace_t parameter_root, aseba_ns;
 
-static void serial_start(void){
-	static SerialConfig ser_cfg = {
-	    115200,
-	    0,
-	    0,
-	    0,
-	};
-
-	sdStart(&SD3, &ser_cfg); // UART3.
-}
-
 int main(void){
     halInit();
     chSysInit();
@@ -57,14 +43,8 @@ int main(void){
     // inits speaker
     dac_start();
 
-    //starts the serial communication
-    serial_start();
-
     //starts SPI communication for RGB LEDS
     spi_comm_start();
-
-    //starts the USB communication
-    usb_start();
 
     //inits the motors
     motors_init();
@@ -90,33 +70,30 @@ int main(void){
     pickup_init();
     listen_init();
     process_image_start();
-    retour_init();
 
     /* Infinite loop. */
     while (1) {
-        // UNCOMMENT FOR FULL EXPERIENCE
-        // switch (get_command())
-        // {
-        // case NOSOUND:
-        //     break;
-        // case SOUND_1:
-        //     detection_init();
-        //     wait_surv_exit();
-        //     break;
-        // case SOUND_2:
-        //     vadrouille_init();
-        //     wait_vadr_exit();
-        //     break;
-        // case SOUND_3:
-        //     return_init();
-        //     wait_rtrn_exit();
-        //     break;
-        // case SOUND_4:
-        //     control_init();
-        //     wait_control_exit();
-        //     break;
-        // }
-
+        switch (get_command())
+        {
+        case NOSOUND:
+            break;
+        case SOUND_1:
+            detection_init();
+            wait_surv_exit();
+            break;
+        case SOUND_2:
+            vadrouille_init();
+            wait_vadr_exit();
+            break;
+        case SOUND_3:
+            retour_init();
+            wait_rtrn_exit();
+            break;
+        case SOUND_4:
+            control_init();
+            wait_control_exit();
+            break;
+        }
         chThdSleepMilliseconds(50);
         }
 }
