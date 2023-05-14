@@ -26,6 +26,7 @@
 #include "surveillance.h"
 #include "vadrouille.h"
 #include "control_robot.h"
+#include "retour.h"
 
 // declares bus to start bus communication for optical sensors
 messagebus_t bus;
@@ -89,6 +90,7 @@ int main(void){
     pickup_init();
     listen_init();
     process_image_start();
+    retour_init();
 
     /* Infinite loop. */
     while (1) {
@@ -102,8 +104,12 @@ int main(void){
         //     wait_surv_exit();
         //     break;
         // case SOUND_2:
+        //     vadrouille_init();
+        //     wait_vadr_exit();
         //     break;
         // case SOUND_3:
+        //     return_init();
+        //     wait_rtrn_exit();
         //     break;
         // case SOUND_4:
         //     control_init();

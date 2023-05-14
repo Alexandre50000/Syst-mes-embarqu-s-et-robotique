@@ -9,19 +9,15 @@
 
 #include "image_processing.h"
 #include "main.h"
-#define RED 		1
-#define GREEN		0
-
 static float distance_cm = 0;
 static uint16_t line_position = IMAGE_BUFFER_SIZE/2;	//middle
 static uint8_t detect_color = RED;
-static uint8_t line_not_found = 0;
+static uint8_t line_not_found = 1;
 
 // Extracts only the red pixels by default
 
 //semaphore
 static BSEMAPHORE_DECL(image_ready_sem, TRUE);
-static BSEMAPHORE_DECL(line_found_sem, TRUE);
 
 /*
  *  Returns the line's width extracted from the image buffer given

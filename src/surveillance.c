@@ -12,12 +12,13 @@
 #define VITESSE_ROTATION_ATTAQUE_INTERIEUR  900
 #define VITESSE_ROTATION_ATTAQUE_EXTERIEUR  900
 #define DETECTION_DISTANCE                  100   // En mm
+#define VITESSE_ROTATION_MIDDLE             178   // Vitesse pour faire 1° de deplacement en 20 ms
 
-// SStatic variable
+// Static variables
 static uint8_t detected = 0;
 static uint8_t terminate = 0;
 
-//semaphore
+//semaphores
 static BSEMAPHORE_DECL(detection_finished_sem, TRUE);
 static BSEMAPHORE_DECL(rotation_finished_sem, TRUE);
 static BSEMAPHORE_DECL(surv_exit_sem, TRUE);
@@ -128,12 +129,12 @@ void middle(void){
     do{
         uint16_t line_pos = get_line_position();
         if(line_pos < (IMAGE_BUFFER_SIZE/2-20)){
-            right_motor_set_speed(600);
-            left_motor_set_speed(-600);
+            right_motor_set_speed(VITESSE_ROTATION_MIDDLE);
+            left_motor_set_speed(-VITESSE_ROTATION_MIDDLE);
         }
         else if(line_pos > (IMAGE_BUFFER_SIZE/2+20)){
-            right_motor_set_speed(-600);
-            left_motor_set_speed(600);
+            right_motor_set_speed(-VITESSE_ROTATION_MIDDLE);
+            left_motor_set_speed(VITESSE_ROTATION_MIDDLE);
         }
         else{
             right_motor_set_speed(0);
