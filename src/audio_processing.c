@@ -10,7 +10,7 @@
 
 //semaphore
 static BSEMAPHORE_DECL(micDataReady_sem, TRUE);
-static BSEMAPHORE_DECL(commandReady, TRUE);
+static BSEMAPHORE_DECL(commandReady_sem, TRUE);
 
 //2 times FFT_SIZE because these arrays contain complex numbers (real + imaginary)
 static float micLeft_cmplx_input[2 * FFT_SIZE];
@@ -92,7 +92,7 @@ void compute_command(void){
 
 	// gives a debounce to make sure it's the right command to remove noise
 	if(hertz == last_hertz){
-		chBSemSignal(&commandReady);
+		chBSemSignal(&commandReady_sem);
 	}
 	
 }
@@ -189,7 +189,7 @@ void listen_init(void){
 *
 */
 uint8_t get_command(void){
-	chBSemWait(&commandReady);
+	chBSemWait(&commandReady_sem);
 	return hertz;
 }
 

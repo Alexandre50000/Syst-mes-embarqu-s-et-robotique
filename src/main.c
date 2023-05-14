@@ -82,12 +82,14 @@ int main(void){
             wait_surv_exit();
             break;
         case SOUND_2:
-            vadrouille_init();
-            wait_vadr_exit();
+            patrol_init();
+            wait_patr_exit();
             break;
         case SOUND_3:
+            select_color_detection(RED);
             retour_init();
             wait_rtrn_exit();
+            select_color_detection(GREEN);
             break;
         case SOUND_4:
             control_init();

@@ -2,7 +2,7 @@
 #define VADROUILLE_H
 
 void randomMove(void);
-void vadrouille_init(void);
+void patrol_init(void);
 void check_command(uint16_t waittime);
-void wait_vadr_exit(void);
+void wait_patr_exit(void);
 #endif

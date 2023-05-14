@@ -21,7 +21,7 @@
 #define MIN_DIST            20 //en mm
 
 //semaphore
-static BSEMAPHORE_DECL(vadr_exit_sem, TRUE);
+static BSEMAPHORE_DECL(patr_exit_sem, TRUE);
 
 // Fonction de déplacement aléatoire
 void randomMove(void) {
@@ -81,8 +81,8 @@ void randomMove(void) {
 }
 
 
-static THD_WORKING_AREA(waVadrouille, 256);
-static THD_FUNCTION(Vadrouille, arg) {
+static THD_WORKING_AREA(waPatrol, 256);
+static THD_FUNCTION(Patrol, arg) {
 
     chRegSetThreadName(__FUNCTION__);
     (void)arg;
@@ -110,7 +110,7 @@ void check_command(uint16_t waittime){
     while(counter != 0){
         uint8_t com = get_command();
         if(com == SOUND_5){
-            chBSemSignal(&vadr_exit_sem);
+            chBSemSignal(&patr_exit_sem);
             chThdExit(MSG_OK);
         }
         counter -= 1;
@@ -119,10 +119,10 @@ void check_command(uint16_t waittime){
 
 }
 
-void vadrouille_init(void){
-    chThdCreateStatic(waVadrouille, sizeof(waVadrouille), NORMALPRIO, Vadrouille, NULL);
+void patrol_init(void){
+    chThdCreateStatic(waPatrol, sizeof(waPatrol), NORMALPRIO, Patrol, NULL);
 }
 
-void wait_vadr_exit(void){
-    chBSemWait(&vadr_exit_sem);
+void wait_patr_exit(void){
+    chBSemWait(&patr_exit_sem);
 }
