@@ -82,7 +82,7 @@ void deplacement_base(void){
 
 
 void retour_init(void){
-    select_color_detection(GREEN);
+    select_color_detection(RED);
     chThdCreateStatic(waRetour, sizeof(waRetour), NORMALPRIO, Retour, NULL);
 }
 

@@ -19,14 +19,12 @@ static THD_FUNCTION(Control, arg) {
     chRegSetThreadName(__FUNCTION__);
     (void)arg;
 
-    chprintf((BaseSequentialStream *) &SD3, "Entered control mode \n");
     uint8_t control_working = 1;
 
     while(control_working){
         switch (get_command())
         {
         case NOSOUND:
-            chprintf((BaseSequentialStream *) &SD3, "No command \n");
             left_motor_set_speed(0);
             right_motor_set_speed(0);
             break;
@@ -52,14 +50,12 @@ static THD_FUNCTION(Control, arg) {
             break;
         case SOUND_5:
             //quitter le mode controle
-            chprintf((BaseSequentialStream *) &SD3, "Heard SOUND 5 \n");
             control_working = 0;
             break;
         }
         chThdSleepMilliseconds(50);
     }
     
-    chprintf((BaseSequentialStream *) &SD3, "Exited control mode \n");
     left_motor_set_speed(0);
     right_motor_set_speed(0);
     chBSemSignal(&control_exit_sem);
